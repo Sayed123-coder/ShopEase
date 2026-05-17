@@ -11,12 +11,12 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    category: searchParams.get('category') || 'All',
-    minPrice: '',
-    maxPrice: '',
-    search: '',
-    sort: 'createdAt',
-  });
+  category: searchParams.get('category') || 'All',
+  minPrice: '',
+  maxPrice: '',
+  search: searchParams.get('search') || '',  
+  sort: 'createdAt',
+});
   const [showFilters, setShowFilters] = useState(false);
 
   const categories = [
@@ -31,6 +31,17 @@ const Products = () => {
     'Mobiles',
     'Computers',
   ];
+
+  // Pehle wale useEffect ke upar yeh add karo
+useEffect(() => {
+  const searchFromUrl = searchParams.get('search') || '';
+  const categoryFromUrl = searchParams.get('category') || 'All';
+  setFilters(prev => ({
+    ...prev,
+    search: searchFromUrl,
+    category: categoryFromUrl,
+  }));
+}, [searchParams]);
 
   useEffect(() => {
     fetchProducts();

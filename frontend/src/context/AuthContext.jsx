@@ -31,12 +31,19 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const register = async (name, email, password) => {
-    const { data } = await api.post('/api/auth/register', { name, email, password });
-    localStorage.setItem('userInfo', JSON.stringify(data.data));
-    setUser(data.data);
-    return data;
-  };
+ const register = async (name, email, password, userData = null) => {
+  
+  if (userData) {
+    localStorage.setItem('userInfo', JSON.stringify(userData));
+    setUser(userData);
+    return;
+  }
+  
+  const { data } = await api.post('/api/auth/register', { name, email, password });
+  localStorage.setItem('userInfo', JSON.stringify(data.data));
+  setUser(data.data);
+  return data;
+};
 
   const logout = () => {
     localStorage.removeItem('userInfo');

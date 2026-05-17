@@ -1,4 +1,4 @@
-# 🚀 QUICK SETUP GUIDE - BCA E-Commerce Project
+# 🚀 QUICK SETUP GUIDE - ShopEase
 
 ## 📦 What You Have
 
@@ -6,15 +6,19 @@ A complete, production-ready e-commerce platform with:
 - ✅ Beautiful React frontend with Tailwind CSS
 - ✅ RESTful Node.js/Express backend
 - ✅ MongoDB database integration
-- ✅ JWT authentication & authorization
+- ✅ JWT + Google OAuth authentication
+- ✅ Email OTP verification
 - ✅ Complete admin panel
+- ✅ Seller management system
+- ✅ Negotiation/Bargain system
+- ✅ Smart Spending Report
 - ✅ 12 pre-seeded products
-- ✅ Responsive design
+- ✅ Responsive design (Mobile + Desktop)
 - ✅ Smooth animations
 
 ---
 
-## ⚡ 5-MINUTE SETUP
+## ⚡ SETUP STEPS
 
 ### Step 1: Install Dependencies
 
@@ -30,24 +34,41 @@ cd frontend
 npm install
 ```
 
-### Step 2: Setup MongoDB
+### Step 2: Setup Environment Variables
 
-1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Create free account
-3. Create a new cluster
-4. Get connection string
-5. Update `backend/.env` file with your connection string
+**`backend/.env`:**
+```
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=any_random_secret_key
+JWT_EXPIRE=30d
+PORT=5000
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+CLOUDINARY_API_KEY=your_cloudinary_key
+CLOUDINARY_API_SECRET=your_cloudinary_secret
+CLIENT_URL=http://localhost:5173
+BACKEND_URL=http://localhost:5000
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASS=your_gmail_app_password
+SESSION_SECRET=any_random_string
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_secret
+```
+
+**`frontend/.env`:**
+```
+VITE_API_URL=http://localhost:5000
+```
 
 ### Step 3: Seed Database
 
 ```bash
 cd backend
-npm run seed
+node utils/seedProducts.js
 ```
 
 This creates:
-- **Admin user**: admin@ecommerce.com / admin123
-- **12 sample products**
+- **Admin**: admin@shopease.com / admin123
+- **12 sample products** with seller field
 
 ### Step 4: Run the Application
 
@@ -65,100 +86,139 @@ npm run dev
 ```
 Runs on: http://localhost:5173
 
-### Step 5: Access & Test
-
-1. **Frontend**: http://localhost:5173
-2. **Admin Login**: admin@ecommerce.com / admin123
-3. **Test Features**:
-   - Browse products
-   - Add to cart
-   - Register new user
-   - Place order
-   - Login as admin
-   - Manage products
-
 ---
 
-## 📝 API ENDPOINTS QUICK REFERENCE
+## 🔑 Login Credentials
 
-### Authentication
-- `POST /api/auth/register` - Register
-- `POST /api/auth/login` - Login
-- `GET /api/auth/profile` - Get profile
-- `PUT /api/auth/profile` - Update profile
-
-### Products
-- `GET /api/products` - Get all products (with filters)
-- `GET /api/products/featured` - Featured products
-- `GET /api/products/:id` - Single product
-- `POST /api/products` - Create (Admin only)
-- `PUT /api/products/:id` - Update (Admin only)
-- `DELETE /api/products/:id` - Delete (Admin only)
-
-### Orders
-- `POST /api/orders` - Create order
-- `GET /api/orders/myorders` - User orders
-- `GET /api/orders` - All orders (Admin)
-- `PUT /api/orders/:id/status` - Update status (Admin)
-
-### Admin
-- `GET /api/admin/stats` - Dashboard stats
-- `GET /api/admin/users` - All users
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@shopease.com | admin123 |
+| User | Register from signup page | - |
 
 ---
 
 ## 🎯 TESTING CHECKLIST
 
-**User Flow:**
-- [ ] Register new account
-- [ ] Login with credentials
-- [ ] Browse products
+### User Flow:
+- [ ] Register with Email OTP verification
+- [ ] Login with Google OAuth
+- [ ] Browse & search products
 - [ ] Filter by category/price
 - [ ] View product details
-- [ ] Add to cart
-- [ ] Update cart quantity
-- [ ] Proceed to checkout
+- [ ] Add to cart → Go to Cart button
 - [ ] Place order
 - [ ] View order history
+- [ ] Make negotiation offer
+- [ ] View spending report
+- [ ] Forgot password with OTP
 
-**Admin Flow:**
-- [ ] Login as admin
+### Seller Flow:
+- [ ] Apply to become seller (Admin approval needed)
+- [ ] Add product (Admin approval needed)
+- [ ] View pending approval badge on dashboard
+- [ ] Manage own products
+- [ ] View negotiation badge in navbar
+- [ ] Accept/Reject/Counter negotiations
+- [ ] View & manage own orders
+
+### Admin Flow:
 - [ ] View dashboard stats
-- [ ] Add new product
-- [ ] Edit existing product
-- [ ] Delete product
-- [ ] View all orders
-- [ ] Update order status
+- [ ] Approve/Reject seller requests (AdminUsers page)
+- [ ] Approve/Reject products (ManageProducts page)
+- [ ] View products grouped by seller
+- [ ] Manage all orders
+- [ ] View all negotiations
+- [ ] Remove seller access
+- [ ] Delete users
+
+---
+
+## 🌟 UNIQUE FEATURES
+
+### 1. 🤝 Bargain/Negotiate Price
+- Users can send price offers to sellers
+- Sellers can Accept, Reject, or Counter offer
+- Maximum 3 offers per product
+- Real-time badge notification for sellers
+
+### 2. 📊 Smart Spending Report
+- Monthly spending chart
+- Category-wise spending breakdown
+- Visual charts with Recharts
+
+### 3. 🔐 Seller Approval System
+- Users apply to become sellers
+- Admin approves/rejects requests
+- 3 rejection limit — permanently blocked
+
+### 4. ✅ Product Approval System
+- Sellers add products — pending by default
+- Admin approves before product goes live
+- Badge notification for admin
+
+### 5. 📧 Email OTP Verification
+- Registration requires email OTP
+- Forgot password via OTP
+- 10 minute OTP expiry
+
+### 6. 🌐 Google OAuth
+- One-click Google login
+- Auto account creation on first login
 
 ---
 
 ## 🐛 TROUBLESHOOTING
 
 **Problem**: Backend won't start
-**Solution**: 
-- Check MongoDB connection string in `.env`
-- Ensure MongoDB Atlas IP whitelist includes your IP
+**Solution**: Check `.env` file — all variables filled?
 
-**Problem**: Frontend can't connect to backend
-**Solution**:
-- Verify backend is running on port 5000
-- Check CORS settings in `backend/server.js`
+**Problem**: OTP not received
+**Solution**: Check Gmail App Password in `.env` — use App Password not Gmail password
 
-**Problem**: No products showing
-**Solution**:
-- Run `npm run seed` in backend directory
-- Check MongoDB connection
+**Problem**: Google login not working
+**Solution**: Check `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env`
+
+**Problem**: Products not showing
+**Solution**: Run `node utils/seedProducts.js` in backend
+
+**Problem**: CORS error
+**Solution**: Check `CLIENT_URL` in backend `.env` matches frontend URL
 
 ---
 
-## 📚 PROJECT STRUCTURE
+## 📚 API ENDPOINTS QUICK REFERENCE
 
-```
-ecommerce-bca-project/
-├── backend/          # Node.js/Express API
-├── frontend/         # React + Vite + Tailwind
-└── README.md         # Complete documentation
-```
+### Auth
+- `POST /api/auth/send-register-otp` - Send OTP
+- `POST /api/auth/verify-register-otp` - Verify & Register
+- `POST /api/auth/login` - Login
+- `GET /api/auth/google` - Google OAuth
+- `POST /api/auth/forgot-password` - Send reset OTP
+- `POST /api/auth/reset-password` - Reset password
+
+### Products
+- `GET /api/products` - All active products
+- `GET /api/products/featured` - Featured products
+- `GET /api/products/admin/all` - All products (Admin)
+- `POST /api/products` - Create (Admin)
+
+### Orders
+- `POST /api/orders` - Place order
+- `GET /api/orders/myorders` - My orders
+- `GET /api/orders/seller-orders` - Seller orders
+- `PUT /api/orders/:id/status` - Update status
+
+### Negotiations
+- `POST /api/negotiations` - Make offer
+- `GET /api/negotiations/my` - My offers
+- `GET /api/negotiations/seller` - Seller offers
+- `PUT /api/negotiations/:id` - Respond to offer
+
+### Admin
+- `GET /api/admin/stats` - Dashboard stats
+- `GET /api/admin/users` - All users
+- `PUT /api/admin/users/:id/approve-seller` - Approve seller
+- `PUT /api/admin/products/:id/approve` - Approve product
 
 ---
 
@@ -166,31 +226,22 @@ ecommerce-bca-project/
 
 **Key Points to Mention:**
 1. **Tech Stack**: MERN (MongoDB, Express, React, Node.js)
-2. **Features**: Full authentication, cart, checkout, admin panel
-3. **Security**: JWT tokens, password hashing, role-based access
-4. **UI/UX**: Responsive design, animations, loading states
-5. **Database**: MongoDB with Mongoose ODM
+2. **Authentication**: JWT + Google OAuth + Email OTP
+3. **Unique Features**: Bargain system, Spending Report, Seller Approval, Product Approval
+4. **Security**: Bcrypt hashing, Role-based access, OTP verification
+5. **UI/UX**: Responsive, animations, real-time badges
 6. **State Management**: React Context API
 
 **Demo Flow:**
 1. Show homepage with products
-2. Demonstrate filtering/search
-3. Add products to cart
-4. Complete checkout process
-5. Login as admin
-6. Show dashboard statistics
-7. Demonstrate CRUD operations on products
+2. Register with OTP verification
+3. Browse & search products
+4. Add to cart & checkout
+5. Make negotiation offer
+6. Login as seller — show badges
+7. Login as admin — approve products/sellers
+8. Show spending report
 
 ---
 
-## 📞 SUPPORT
-
-Refer to the main `README.md` for:
-- Complete API documentation
-- Database schemas
-- Detailed viva questions & answers
-- Architecture diagrams
-
----
-
-**🎉 You're all set! Your BCA project is ready to impress!**
+**Made with ❤️ by Sayed Aman**

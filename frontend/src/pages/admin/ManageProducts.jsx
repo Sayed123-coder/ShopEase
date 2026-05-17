@@ -11,6 +11,8 @@ const ManageProducts = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [groupedProducts, setGroupedProducts] = useState({});
+  const [pendingProducts, setPendingProducts] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -28,8 +30,22 @@ const ManageProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data } = await api.get('/api/products');
+      const { data } = await api.get('/api/products/admin/all');
       setProducts(data.data);
+
+      // Pending aur Active alag karo
+      const pending = data.data.filter(p => !p.isActive);
+      const active = data.data.filter(p => p.isActive);
+      setPendingProducts(pending);
+
+      // Sirf active products seller wise group karo
+      const grouped = {};
+      active.forEach(p => {
+        const sellerName = p.seller?.name || 'Unknown Seller';
+        if (!grouped[sellerName]) grouped[sellerName] = [];
+        grouped[sellerName].push(p);
+      });
+      setGroupedProducts(grouped);
     } catch (error) {
       toast.error('Failed to load products');
     } finally {
@@ -141,6 +157,29 @@ const ManageProducts = () => {
     setImagePreview('');
   };
 
+  // Product approve karo
+  const handleApproveProduct = async (id) => {
+    try {
+      await api.put(`/api/admin/products/${id}/approve`);
+      toast.success('Product approved! ✅');
+      fetchProducts();
+    } catch (error) {
+      toast.error('Failed to approve!');
+    }
+  };
+
+  // Product reject karo
+  const handleRejectProduct = async (id) => {
+    if (!window.confirm('Product reject karna chahte ho? Yeh delete ho jaayega!')) return;
+    try {
+      await api.delete(`/api/admin/products/${id}/reject`);
+      toast.success('Product rejected! ❌');
+      fetchProducts();
+    } catch (error) {
+      toast.error('Failed to reject!');
+    }
+  };
+
   if (loading) return <div className="flex justify-center items-center min-h-screen"><div className="loading-spinner"></div></div>;
 
   return (
@@ -156,6 +195,7 @@ const ManageProducts = () => {
           </button>
         </div>
 
+        {/* Add/Edit Form */}
         {showForm && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-8">
             <h2 className="text-xl font-bold mb-6">
@@ -185,23 +225,12 @@ const ManageProducts = () => {
                 onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                 className="input-field" />
 
-              {/* Image Upload */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">Product Image</label>
-                {/* Preview */}
                 {imagePreview && (
-                  <img
-                    src={imagePreview}
-                    alt="preview"
-                    className="w-24 h-24 object-cover rounded-lg mb-2"
-                  />
+                  <img src={imagePreview} alt="preview" className="w-24 h-24 object-cover rounded-lg mb-2" />
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="input-field"
-                />
+                <input type="file" accept="image/*" onChange={handleImageChange} className="input-field" />
                 {uploadingImage && <p className="text-xs text-indigo-500 mt-1">Uploading...</p>}
               </div>
 
@@ -224,56 +253,113 @@ const ManageProducts = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left py-4 px-6">Product</th>
-                <th className="text-left py-4 px-6">Category</th>
-                <th className="text-left py-4 px-6">Price</th>
-                <th className="text-left py-4 px-6">Stock</th>
-                <th className="text-left py-4 px-6">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr key={product._id} className="border-b hover:bg-gray-50">
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-4">
-                      <img
-                        src={product.images?.[0] || 'https://via.placeholder.com/300x300.png?text=No+Image'}
-                        alt={product.name}
-                        className="w-12 h-12 object-cover rounded-lg"
-                      />
-                      <span className="font-semibold">{product.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">{product.category}</td>
-                  <td className="py-4 px-6 font-semibold">₹{product.price.toLocaleString()}</td>
-                  <td className="py-4 px-6">
-                    <span className={`badge ${
-                      product.stock > 10 ? 'bg-green-100 text-green-700' :
-                      product.stock > 0 ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {product.stock}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex space-x-2">
-                      <button onClick={() => handleEdit(product)} className="text-blue-600 hover:text-blue-800">
-                        <FiEdit2 />
-                      </button>
-                      <button onClick={() => handleDelete(product._id)} className="text-red-600 hover:text-red-800">
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+        {/* ⏳ Pending Approval Section */}
+        {pendingProducts.length > 0 && (
+          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 className="text-lg font-bold mb-4 text-yellow-700">
+              ⏳ Pending Approval ({pendingProducts.length})
+            </h2>
+            <div className="space-y-3">
+              {pendingProducts.map(product => (
+                <div key={product._id} className="flex items-center gap-4 border rounded-lg p-3 bg-yellow-50">
+                  <img
+                    src={product.images?.[0] || 'https://placehold.co/300x300?text=No+Image'}
+                    alt={product.name}
+                    className="w-12 h-12 object-cover rounded"
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold">{product.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {product.category} • ₹{product.price?.toLocaleString()} • Seller: <span className="font-medium text-indigo-600">{product.seller?.name || 'Unknown'}</span>
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleApproveProduct(product._id)}
+                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm font-semibold"
+                    >
+                      ✅ Approve
+                    </button>
+                    <button
+                      onClick={() => handleRejectProduct(product._id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold"
+                    >
+                      ❌ Reject
+                    </button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ Active Products — Seller Wise */}
+        {Object.entries(groupedProducts).map(([sellerName, sellerProducts]) => (
+          <div key={sellerName} className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+            <div className="bg-indigo-50 border-b px-6 py-3 flex justify-between items-center">
+              <h2 className="font-bold text-indigo-700">🏪 {sellerName}</h2>
+              <span className="text-sm text-indigo-500">{sellerProducts.length} products</span>
+            </div>
+
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left py-4 px-6">Product</th>
+                  <th className="text-left py-4 px-6">Category</th>
+                  <th className="text-left py-4 px-6">Price</th>
+                  <th className="text-left py-4 px-6">Stock</th>
+                  <th className="text-left py-4 px-6">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sellerProducts.map((product) => (
+                  <tr key={product._id} className="border-b hover:bg-gray-50">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-4">
+                        <img
+                          src={product.images?.[0] || 'https://placehold.co/300x300?text=No+Image'}
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded-lg"
+                        />
+                        <span className="font-semibold">{product.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">{product.category}</td>
+                    <td className="py-4 px-6 font-semibold">₹{product.price.toLocaleString()}</td>
+                    <td className="py-4 px-6">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        product.stock > 10 ? 'bg-green-100 text-green-700' :
+                        product.stock > 0 ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {product.stock}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex space-x-2">
+                        <button onClick={() => handleEdit(product)} className="text-blue-600 hover:text-blue-800">
+                          <FiEdit2 />
+                        </button>
+                        <button onClick={() => handleDelete(product._id)} className="text-red-600 hover:text-red-800">
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+
+        {/* Koi active product nahi */}
+        {Object.keys(groupedProducts).length === 0 && pendingProducts.length === 0 && (
+          <div className="text-center py-20 text-gray-500">
+            <p className="text-4xl mb-4">📦</p>
+            <p>Koi product nahi hai!</p>
+          </div>
+        )}
+
       </div>
     </div>
   );

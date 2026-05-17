@@ -1,4 +1,4 @@
-// context/negotiationContext.jsx
+// context/NegotiationContext.jsx
 
 import { createContext, useState, useContext } from 'react';
 import api from '../utils/api';
@@ -17,6 +17,7 @@ export const NegotiationProvider = ({ children }) => {
   const [negotiations, setNegotiations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pendingCount, setPendingCount] = useState(0); // ✅ andar hai
 
   // User offer bheje
   const makeOffer = async (productId, offeredPrice, message) => {
@@ -62,7 +63,7 @@ export const NegotiationProvider = ({ children }) => {
     }
   };
 
-  // Admin respond kare
+  // Admin/Seller respond kare
   const respondToOffer = async (id, status, counterPrice) => {
     try {
       setLoading(true);
@@ -70,7 +71,6 @@ export const NegotiationProvider = ({ children }) => {
         status,
         counterPrice,
       });
-      // Update local state
       setNegotiations((prev) =>
         prev.map((n) => (n._id === id ? data : n))
       );
@@ -83,53 +83,54 @@ export const NegotiationProvider = ({ children }) => {
     }
   };
 
+  const getProductNegotiation = async (productId) => {
+    try {
+      const { data } = await api.get('/api/negotiations/my');
+      const productNegotiations = data.filter(
+        (n) => n.product._id === productId
+      );
+      return productNegotiations;
+    } catch (error) {
+      return [];
+    }
+  };
 
-const getProductNegotiation = async (productId) => {
-  try {
-    const { data } = await api.get('/api/negotiations/my');
-    const productNegotiations = data.filter(
-      (n) => n.product._id === productId
-    );
-    return productNegotiations;
-  } catch (error) {
-    return [];
-  }
-};
+  const rejectCounter = async (id) => {
+    try {
+      setLoading(true);
+      const { data } = await api.put(`/api/negotiations/${id}/reject-counter`);
+      setNegotiations((prev) =>
+        prev.map((n) => (n._id === id ? data : n))
+      );
+      return data;
+    } catch (error) {
+      setError(error.response?.data?.message || 'Something went wrong');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-
-const rejectCounter = async (id) => {
-  try {
-    setLoading(true);
-    const { data } = await api.put(`/api/negotiations/${id}/reject-counter`);
-    // Local state update karo
-    setNegotiations((prev) =>
-      prev.map((n) => (n._id === id ? data : n))
-    );
-    return data;
-  } catch (error) {
-    setError(error.response?.data?.message || 'Something went wrong');
-    throw error;
-  } finally {
-    setLoading(false);
-  }
-};
-
-const getSellerNegotiations = async () => {
-  try {
-    setLoading(true);
-    const { data } = await api.get('/api/negotiations/seller');
-    setNegotiations(data);
-  } catch (error) {
-    setError(error.response?.data?.message || 'Something went wrong');
-  } finally {
-    setLoading(false);
-  }
-};
+  // ✅ Sirf ek getSellerNegotiations — pendingCount ke saath
+  const getSellerNegotiations = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get('/api/negotiations/seller');
+      setNegotiations(data);
+      const pending = data.filter(n => n.status === 'Pending').length;
+      setPendingCount(pending);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const value = {
     negotiations,
     loading,
     error,
+    pendingCount,
     makeOffer,
     getMyNegotiations,
     getAllNegotiations,

@@ -117,11 +117,16 @@ const Profile = () => {
     }
   };
 
-  const handleBecomeSeller = async () => {
+
+const handleBecomeSeller = async () => {
   try {
     await api.put('/api/seller/become-seller');
-    updateUser({ ...authUser, role: 'seller' });
-    toast.success('Congratulations! You are now a seller 🎉');
+    
+    updateUser({ 
+      ...authUser, 
+      sellerRequest: { status: 'pending' } 
+    });
+    toast.success('Request submitted! Admin will review it. ⏳');
   } catch (error) {
     toast.error(error.response?.data?.message || 'Something went wrong!');
   }
@@ -148,15 +153,40 @@ const Profile = () => {
                 {authUser?.role === 'admin' ? '👑 Admin' : authUser?.role === 'seller' ? '🏪 Seller' : '🛒 Shopper'}
               </span>
 
-              {/* 👇 Become a Seller button */}
-              {authUser?.role === 'user' && (
-              <button
-              onClick={handleBecomeSeller}
-              className="mt-3 block bg-white text-purple-600 hover:bg-purple-50 text-xs font-semibold px-4 py-1.5 rounded-full transition-all"
-              >
-              🏪 Become a Seller
-            </button>
-             )}
+            
+              {/* Become Seller section */}
+               {authUser?.role === 'user' && (
+              <>
+              {authUser?.sellerRequest?.status === 'pending' ? (
+             <div className="mt-3 inline-block bg-yellow-100 text-yellow-700 text-xs font-semibold px-4 py-1.5 rounded-full">
+               ⏳ Seller Request Pending...
+             </div>
+             ) : authUser?.sellerRequest?.rejectionCount >= 3 ? (
+            <div className="mt-3 inline-block bg-red-100 text-red-700 text-xs font-semibold px-4 py-1.5 rounded-full">
+              🚫 Permanently Blocked (3/3 attempts used)
+           </div>
+           ) : authUser?.sellerRequest?.status === 'rejected' ? (
+           <div className="flex flex-col gap-1 mt-3">
+              <span className="text-xs text-red-300">
+               ❌ Rejected ({authUser?.sellerRequest?.rejectionCount}/3 attempts used)
+            </span>
+           <button
+            onClick={handleBecomeSeller}
+             className="bg-white text-purple-600 hover:bg-purple-50 text-xs font-semibold px-4 py-1.5 rounded-full transition-all"
+            >
+           🏪 Apply Again
+           </button>
+          </div>
+            ) : (
+           <button
+           onClick={handleBecomeSeller}
+             className="mt-3 block bg-white text-purple-600 hover:bg-purple-50 text-xs font-semibold px-4 py-1.5 rounded-full transition-all"
+            >
+           🏪 Become a Seller
+          </button>
+           )}
+         </>
+          )}
             </div>
           </div>
         </div>

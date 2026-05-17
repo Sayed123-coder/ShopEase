@@ -137,7 +137,7 @@ const MyOrders = () => {
                 {order.orderItems.map((item, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <img
-                      src={item.image || item.product?.images?.[0] || 'https://via.placeholder.com/300x300.png?text=No+Image'}
+                      src={item.image || item.product?.images?.[0]}
                       alt={item.name}
                       className="w-12 h-12 object-cover rounded"
                     />

@@ -5,18 +5,24 @@ const becomeSeller = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.role === 'seller') return res.status(400).json({ message: 'Already a seller' });
+    if (user.sellerRequest?.status === 'pending') {
+      return res.status(400).json({ message: 'Request already pending!' });
     }
+    if (user.sellerRequest?.rejectionCount >= 3) {
+     return res.status(400).json({ 
+      message: 'You have been rejected 3 times. You cannot apply again.' 
+     });
+    } 
 
-    if (user.role === 'seller') {
-      return res.status(400).json({ message: 'Already a seller' });
-    }
-
-    user.role = 'seller';
+    user.sellerRequest = {
+      status: 'pending',
+      requestedAt: new Date(),
+    };
     await user.save();
 
-    res.status(200).json({ message: 'Congratulations! You are now a seller' });
+    res.status(200).json({ message: 'Seller request submitted! Admin will review it.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -35,6 +41,7 @@ const addProduct = async (req, res) => {
       brand,
       stock,
       images,
+      isActive:false,
     });
 
     res.status(201).json(product);

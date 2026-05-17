@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 
@@ -20,6 +21,7 @@ const emptyForm = {
 
 const SellerDashboard = () => {
   const [products, setProducts] = useState([]);
+  const [sellerOrders, setSellerOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
@@ -41,8 +43,18 @@ const SellerDashboard = () => {
     }
   };
 
+  const fetchOrders = async () => {
+    try {
+      const { data } = await api.get('/api/orders/seller-orders');
+      setSellerOrders(data.data);
+    } catch (error) {
+      console.log('Orders fetch failed');
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchOrders();
   }, []);
 
   const handleChange = (e) => {
@@ -117,8 +129,6 @@ const SellerDashboard = () => {
       return;
     }
 
-    console.log(formData);
-
     setSaving(true);
     try {
       let imageUrl = formData.images;
@@ -175,7 +185,7 @@ const SellerDashboard = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
           <p className="text-sm text-indigo-500">Total Products</p>
           <p className="text-3xl font-bold text-indigo-700">{products.length}</p>
@@ -191,6 +201,16 @@ const SellerDashboard = () => {
           <p className="text-3xl font-bold text-yellow-700">
             {products.filter(p => p.stock === 0).length}
           </p>
+        </div>
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <p className="text-sm text-purple-500">Total Orders</p>
+          <p className="text-3xl font-bold text-purple-700">{sellerOrders.length}</p>
+          <Link
+            to="/seller/orders"
+            className="text-xs text-purple-500 hover:underline mt-1 block"
+          >
+            View Orders →
+          </Link>
         </div>
       </div>
 
@@ -213,7 +233,7 @@ const SellerDashboard = () => {
 
               {/* Image */}
               <img
-                src={product.images?.[0] || 'https://via.placeholder.com/300x300.png?text=No+Image'}
+                src={product.images?.[0] || 'https://placehold.co/300x300?text=No+Image'}
                 alt={product.name}
                 className="w-16 h-16 object-cover rounded"
               />
@@ -317,7 +337,6 @@ const SellerDashboard = () => {
               <div>
                 <label className="block text-sm font-medium mb-1">Product Image</label>
 
-                {/* Preview */}
                 {imagePreview && (
                   <img
                     src={imagePreview}

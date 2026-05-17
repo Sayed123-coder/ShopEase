@@ -35,7 +35,7 @@ const ProductCard = ({ product }) => {
               alt={product.name}
               className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
               onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/300x300.png?text=No+Image';
+                e.target.src = 'https://placehold.co/300x300?text=No+Image';
               }}
             />
             {discount > 0 && (

@@ -17,42 +17,64 @@ A modern, feature-rich e-commerce website built with MERN stack (MongoDB, Expres
 ## ✨ Features
 
 ### **User Features**
-- ✅ User registration and authentication with JWT
+- ✅ User registration with **Email OTP Verification**
+- ✅ Login with Email/Password or **Google OAuth**
+- ✅ **Forgot Password** with OTP reset
 - ✅ Browse products with advanced filters (category, price range, search)
+- ✅ **Navbar Search Bar** — search from anywhere
 - ✅ Product detail page with complete information
+- ✅ **Out of Stock** detection — disabled buttons when stock is 0
 - ✅ Add to cart with quantity management
-- ✅ Secure checkout process
+- ✅ **Go to Cart** button after adding product
+- ✅ Secure checkout process (GST included in price)
 - ✅ Order history with timeline tracking
 - ✅ Cancel order (Pending/Processing stage)
 - ✅ **🤝 Bargain/Negotiate Price** — Send price offers to sellers (UNIQUE FEATURE)
 - ✅ **📊 Smart Spending Report** — Monthly & category-wise spending analytics (UNIQUE FEATURE)
 - ✅ User Profile with avatar, gender, date of birth
 - ✅ Responsive design (Mobile + Desktop)
+- ✅ Active link highlight in Navbar
+- ✅ Mobile menu auto-close on navigation
 
 ### **Seller Features**
-- ✅ Become a Seller from Profile page
+- ✅ Apply to become a Seller — **Admin Approval Required**
+- ✅ 3 rejection limit — permanently blocked after 3 rejections
 - ✅ Seller Dashboard — Add, Edit, Delete own products
+- ✅ **Product Approval System** — Products visible only after admin approval
+- ✅ **Pending Approval** badge on dashboard for unapproved products
 - ✅ Image upload with Cloudinary
 - ✅ Handle negotiations on own products (Accept/Reject/Counter)
+- ✅ **Seller Orders** — View & manage only own product orders
+- ✅ Update order status (Pending → Processing → Shipped → Delivered)
+- ✅ **Negotiation Badge** — Real-time pending count in Navbar (updates every 1 min)
 - ✅ View spending report as a buyer
 
 ### **Admin Features**
 - ✅ Admin dashboard with real-time statistics
-- ✅ Product CRUD operations with image upload
+- ✅ **Pending Products** count on dashboard card
+- ✅ **Approve/Reject** seller product requests
+- ✅ **Seller Wise** product management
+- ✅ **Approve/Reject** seller account requests
+- ✅ **Remove Seller** access without deleting account
+- ✅ User management — view all users, delete accounts
 - ✅ Order management and status updates
 - ✅ Monitor all negotiations
 - ✅ Revenue tracking
+- ✅ **Pending Products badge** in Navbar (updates every 1 min)
 
 ### **Technical Features**
 - ✅ Role-based access control (User/Seller/Admin)
 - ✅ Secure password hashing with bcrypt
 - ✅ JWT-based authentication
+- ✅ **Google OAuth** with Passport.js
+- ✅ **Email OTP** verification with Nodemailer
 - ✅ RESTful API architecture
 - ✅ MongoDB database with Mongoose ODM
 - ✅ Cloudinary for image storage
 - ✅ Context API for state management
 - ✅ Toast notifications
 - ✅ Loading skeletons for better UX
+- ✅ **Stock validation** on order placement
 
 ---
 
@@ -81,22 +103,27 @@ A modern, feature-rich e-commerce website built with MERN stack (MongoDB, Expres
 | Mongoose | ODM for MongoDB |
 | JWT | Authentication |
 | bcryptjs | Password hashing |
+| Passport.js | Google OAuth |
+| Nodemailer | Email OTP |
 | Multer | File upload handling |
 | Cloudinary | Image cloud storage |
 | CORS | Cross-origin requests |
+| express-session | Session management |
 
 ---
 
 ## 📁 Project Structure
 
+```
 ecommerce-bca-project/
 │
 ├── backend/
 │   ├── config/
 │   │   ├── db.js                     # MongoDB connection
-│   │   └── cloudinary.js             # Cloudinary configuration
+│   │   ├── cloudinary.js             # Cloudinary configuration
+│   │   └── passport.js               # Google OAuth configuration
 │   ├── controllers/
-│   │   ├── authController.js         # Authentication logic
+│   │   ├── authController.js         # Authentication + OTP logic
 │   │   ├── productController.js      # Product CRUD
 │   │   ├── orderController.js        # Order management
 │   │   ├── adminController.js        # Admin operations
@@ -111,7 +138,8 @@ ecommerce-bca-project/
 │   │   ├── User.js                   # User schema
 │   │   ├── Product.js                # Product schema
 │   │   ├── Order.js                  # Order schema
-│   │   └── Negotiation.js            # Negotiation schema
+│   │   ├── Negotiation.js            # Negotiation schema
+│   │   └── TempOtp.js                # Temporary OTP schema
 │   ├── routes/
 │   │   ├── authRoutes.js
 │   │   ├── productRoutes.js
@@ -120,8 +148,6 @@ ecommerce-bca-project/
 │   │   ├── negotiationRoutes.js
 │   │   ├── sellerRoutes.js
 │   │   └── uploadRoutes.js
-│   ├── scripts/
-│   │   └── migrateImages.js          # Cloudinary migration script
 │   ├── utils/
 │   │   └── seedProducts.js           # Database seeding
 │   ├── .env
@@ -139,9 +165,9 @@ ecommerce-bca-project/
 │   │   │   └── NegotiationContext.jsx # Negotiation state
 │   │   ├── pages/
 │   │   │   ├── user/                 # Home, Products, Cart, Orders, etc.
-│   │   │   ├── auth/                 # Login, Register
-│   │   │   ├── admin/                # Dashboard, ManageProducts, etc.
-│   │   │   └── seller/               # SellerDashboard, SellerNegotiations
+│   │   │   ├── auth/                 # Login, Register, GoogleSuccess
+│   │   │   ├── admin/                # Dashboard, ManageProducts, AdminUsers, etc.
+│   │   │   └── seller/               # SellerDashboard, SellerNegotiations, SellerOrders
 │   │   ├── utils/
 │   │   │   └── api.js                # Axios configuration
 │   │   ├── App.jsx
@@ -152,6 +178,7 @@ ecommerce-bca-project/
 │   └── vite.config.js
 │
 └── README.md
+```
 
 ---
 
@@ -161,8 +188,10 @@ ecommerce-bca-project/
 - Node.js (v16 or higher)
 - MongoDB Atlas account
 - Cloudinary account
+- Gmail account (for OTP emails)
+- Google Cloud Console account (for Google OAuth)
 
-### **Step 1: Extract & Navigate**
+### **Step 1: Clone & Navigate**
 ```bash
 cd ecommerce-bca-project
 ```
@@ -180,7 +209,7 @@ npm install
 ```
 
 3. Create `.env` file:
-
+```
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
 JWT_EXPIRE=30d
@@ -188,6 +217,14 @@ PORT=5000
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+CLIENT_URL=http://localhost:5173
+BACKEND_URL=http://localhost:5000
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASS=your_gmail_app_password
+SESSION_SECRET=any_random_string
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
 
 4. Seed the database:
 ```bash
@@ -195,7 +232,7 @@ node utils/seedProducts.js
 ```
 **This will create:**
 - Admin user: `admin@shopease.com` / `admin123`
-- 12 sample products
+- 12 sample products with seller field
 
 5. Start backend server:
 ```bash
@@ -215,7 +252,12 @@ cd frontend
 npm install
 ```
 
-3. Start frontend server:
+3. Create `.env` file:
+```
+VITE_API_URL=http://localhost:5000
+```
+
+4. Start frontend server:
 ```bash
 npm run dev
 ```
@@ -237,16 +279,22 @@ Frontend runs on `http://localhost:5173`
 ### **Authentication Routes** (`/api/auth`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
-| POST | `/register` | Register new user | Public |
+| POST | `/send-register-otp` | Send OTP for registration | Public |
+| POST | `/verify-register-otp` | Verify OTP & create account | Public |
 | POST | `/login` | User login | Public |
+| GET | `/google` | Google OAuth login | Public |
+| GET | `/google/callback` | Google OAuth callback | Public |
+| POST | `/forgot-password` | Send reset OTP | Public |
+| POST | `/reset-password` | Reset password with OTP | Public |
 | GET | `/profile` | Get user profile | Private |
 | PUT | `/profile` | Update profile | Private |
 
 ### **Product Routes** (`/api/products`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
-| GET | `/` | Get all products | Public |
+| GET | `/` | Get all active products | Public |
 | GET | `/featured` | Get featured products | Public |
+| GET | `/admin/all` | Get all products (including inactive) | Admin |
 | GET | `/:id` | Get single product | Public |
 | POST | `/` | Create product | Admin |
 | PUT | `/:id` | Update product | Admin |
@@ -257,11 +305,12 @@ Frontend runs on `http://localhost:5173`
 |--------|----------|-------------|--------|
 | POST | `/` | Create order | Private |
 | GET | `/myorders` | Get my orders | Private |
+| GET | `/seller-orders` | Get seller's product orders | Seller |
 | GET | `/spending-report` | Get spending report | Private |
 | PUT | `/:id/cancel` | Cancel order | Private |
 | GET | `/:id` | Get order by ID | Private |
 | GET | `/` | Get all orders | Admin |
-| PUT | `/:id/status` | Update order status | Admin |
+| PUT | `/:id/status` | Update order status | Admin/Seller |
 
 ### **Negotiation Routes** (`/api/negotiations`)
 | Method | Endpoint | Description | Access |
@@ -276,11 +325,23 @@ Frontend runs on `http://localhost:5173`
 ### **Seller Routes** (`/api/seller`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
-| PUT | `/become-seller` | Become a seller | Private |
-| POST | `/products` | Add product | Seller |
+| PUT | `/become-seller` | Request seller access | Private |
+| POST | `/products` | Add product (pending approval) | Seller |
 | GET | `/products` | Get seller products | Seller |
 | PUT | `/products/:id` | Update product | Seller |
 | DELETE | `/products/:id` | Delete product | Seller |
+
+### **Admin Routes** (`/api/admin`)
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | `/stats` | Dashboard statistics | Admin |
+| GET | `/users` | Get all users | Admin |
+| DELETE | `/users/:id` | Delete user | Admin |
+| PUT | `/users/:id/role` | Update user role | Admin |
+| PUT | `/users/:id/approve-seller` | Approve seller request | Admin |
+| PUT | `/users/:id/reject-seller` | Reject seller request | Admin |
+| PUT | `/products/:id/approve` | Approve product | Admin |
+| DELETE | `/products/:id/reject` | Reject & delete product | Admin |
 
 ### **Upload Routes** (`/api/upload`)
 | Method | Endpoint | Description | Access |
@@ -301,9 +362,16 @@ Frontend runs on `http://localhost:5173`
   phone: String,
   gender: String (Male/Female/Other),
   dateOfBirth: Date,
-  address: {
-    street, city, state, zipCode, country
+  avatar: String,
+  address: { street, city, state, zipCode, country },
+  sellerRequest: {
+    status: String (none/pending/approved/rejected),
+    requestedAt: Date,
+    reviewedAt: Date,
+    rejectionCount: Number,
   },
+  resetPasswordOtp: String,
+  resetPasswordOtpExpiry: Date,
   createdAt, updatedAt
 }
 ```
@@ -323,7 +391,7 @@ Frontend runs on `http://localhost:5173`
   rating: Number,
   numReviews: Number,
   isFeatured: Boolean,
-  isActive: Boolean,
+  isActive: Boolean, // false until admin approves
   createdAt, updatedAt
 }
 ```
@@ -336,9 +404,7 @@ Frontend runs on `http://localhost:5173`
     product: ObjectId,
     name, quantity, price, image, category
   }],
-  shippingAddress: {
-    street, city, state, zipCode, country, phone
-  },
+  shippingAddress: { street, city, state, zipCode, country, phone },
   paymentMethod: String (COD/Card/UPI/Net Banking),
   paymentStatus: String (Pending/Paid/Failed),
   itemsPrice: Number,
@@ -364,24 +430,40 @@ Frontend runs on `http://localhost:5173`
   createdAt, updatedAt
 }
 ```
+
+### **TempOtp Schema**
+```javascript
+{
+  name: String,
+  email: String (unique),
+  password: String,
+  otp: String,
+  otpExpiry: Date,
+  createdAt (auto-expires in 10 minutes)
+}
+```
+
 ---
 
 ## 🎓 Key Learning Outcomes
 
 - Full-stack development with MERN
 - RESTful API design
-- Authentication & Authorization
+- Authentication & Authorization (JWT + Google OAuth)
 - Role-based access control (User/Seller/Admin)
+- Email OTP verification with Nodemailer
 - State management with Context API
 - Cloud image storage with Cloudinary
 - Data visualization with Recharts
 - Responsive web design with Tailwind CSS
 - Database modeling with MongoDB
+- Real-time UI updates with polling
 
 ---
 
 ## 👨‍💻 Author
 
 **Sayed Aman**
+
 ---
 **Made with ❤️ by Sayed Aman**

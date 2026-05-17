@@ -78,7 +78,10 @@ const respondToOffer = async (req, res) => {
     const { status, counterPrice } = req.body;
 
     const negotiation = await Negotiation.findById(req.params.id)
-      .populate('product');
+      .populate({
+       path: 'product',
+       populate: { path: 'seller' }
+     });
 
     if (!negotiation) {
       return res.status(404).json({ message: 'Negotiation not found' });

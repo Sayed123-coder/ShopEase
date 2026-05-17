@@ -26,11 +26,13 @@ const Dashboard = () => {
   if (loading) return <div className="flex justify-center items-center min-h-screen"><div className="loading-spinner"></div></div>;
 
   const statCards = [
-    { title: 'Total Users', value: stats?.totalUsers || 0, icon: <FiUsers />, color: 'bg-blue-500' },
-    { title: 'Total Products', value: stats?.totalProducts || 0, icon: <FiPackage />, color: 'bg-green-500' },
-    { title: 'Total Orders', value: stats?.totalOrders || 0, icon: <FiShoppingBag />, color: 'bg-purple-500' },
-    { title: 'Total Revenue', value: `₹${stats?.totalRevenue || 0}`, icon: <FiDollarSign />, color: 'bg-amber-500' },
-  ];
+  { title: 'Total Users', value: stats?.totalUsers || 0, icon: <FiUsers />, color: 'bg-blue-500', link: '/admin/users' },
+  { title: 'Total Products', value: stats?.totalProducts || 0, icon: <FiPackage />, color: 'bg-green-500', link: '/admin/products' },
+  { title: 'Total Orders', value: stats?.totalOrders || 0, icon: <FiShoppingBag />, color: 'bg-purple-500', link: '/admin/orders' },
+  { title: 'Total Revenue', value: `₹${stats?.totalRevenue || 0}`, icon: <FiDollarSign />, color: 'bg-amber-500', link: '/admin/orders' },
+  {  title: 'Pending Products',  value: stats?.pendingProducts || 0,  icon: <FiPackage />,  color: 'bg-orange-500',  link: '/admin/products' 
+},
+];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -46,18 +48,20 @@ const Dashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {statCards.map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-md p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">{stat.title}</p>
-                  <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                </div>
-                <div className={`${stat.color} text-white p-4 rounded-lg text-2xl`}>
-                  {stat.icon}
-                </div>
+            <Link to={stat.link} key={index}>
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
+           <div className="flex items-center justify-between">
+           <div>
+            <p className="text-gray-600 text-sm">{stat.title}</p>
+            <p className="text-3xl font-bold mt-2">{stat.value}</p>
+           </div>
+              <div className={`${stat.color} text-white p-4 rounded-lg text-2xl`}>
+              {stat.icon}
               </div>
             </div>
-          ))}
+           </div>
+          </Link>
+           ))}
         </div>
 
         {/* Recent Orders */}

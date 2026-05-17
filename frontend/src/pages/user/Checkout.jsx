@@ -25,8 +25,8 @@ const Checkout = () => {
 
   const subtotal = getCartTotal();
   const shipping = subtotal > 500 ? 0 : 50;
-  const tax = subtotal * 0.18;
-  const total = subtotal + shipping + tax;
+  const tax = 0;
+  const total = subtotal + shipping; 
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -39,7 +39,7 @@ const Checkout = () => {
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          image: item.images?.[0] || item.image || 'https://via.placeholder.com/300x300.png?text=No+Image',
+          image: item.images?.[0] || item.image || 'https://placehold.co/300x300?text=No+Image',
           category: item.category || 'Other',
         })),
         shippingAddress,
@@ -189,10 +189,6 @@ const Checkout = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Shipping</span>
                     <span className="font-semibold">{shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tax</span>
-                    <span className="font-semibold">₹{tax.toFixed(2)}</span>
                   </div>
                   <div className="border-t pt-3 flex justify-between text-lg font-bold">
                     <span>Total</span>

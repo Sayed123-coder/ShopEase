@@ -26,7 +26,7 @@ const ProductDetails = () => {
       const { data } = await api.get(`/api/products/${id}`);
       setProduct(data.data);
     } catch (error) {
-      toast.error("Product details load nahi ho pa rahi");
+      toast.error("There is an error in loading products");
     } finally {
       setLoading(false);
     }
@@ -132,15 +132,21 @@ const ProductDetails = () => {
     }
   };
 
-  const { addToCart } = useCart();
+  const { addToCart,cartItems} = useCart();
+  const isInCart = cartItems.some(item => item._id === product?._id);
 
   const handleAddToCart = () => {
+    if (product.stock === 0) {
+     toast.error('Product out of stock! ❌');
+     return;
+   }
   addToCart({
     _id: product._id,
     name: product.name,
     price: product.price,
     images: product.images,
     category: product.category,
+    stock: product.stock,
   }, 1);
   toast.success('Added to cart! 🛒');
 };
@@ -180,7 +186,7 @@ const handleBuyNow = () => {
         <div className="bg-white rounded shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
 
           {/* LEFT – Image */}
-          <div className="sticky top-20">
+          <div>
             <div className="border rounded p-4 flex justify-center">
               <img
                 src={product.images}
@@ -190,18 +196,39 @@ const handleBuyNow = () => {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex gap-4 mt-4">
-              <button 
-               onClick={handleAddToCart}
-              className="w-1/2 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold rounded">
-                🛒 Add to Cart
-              </button>
-              <button 
-               onClick={handleAddToCart}
-              className="w-1/2 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded">
-                ⚡ Buy Now
-              </button>
-            </div>
+             <div className="flex gap-4 mt-4">
+               {isInCart ? (
+                <button
+                 onClick={() => navigate('/cart')}
+                 className="w-1/2 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded"
+                >
+                🛒 Go to Cart
+             </button>
+             ) : (
+             <button
+              onClick={handleAddToCart}
+              disabled={product.stock === 0}
+              className={`w-1/2 py-3 font-semibold rounded ${
+              product.stock === 0
+                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                 : 'bg-yellow-400 hover:bg-yellow-500 text-black'
+              }`}
+           >
+           {product.stock === 0 ? 'Out of Stock ❌' : '🛒 Add to Cart'}
+          </button>
+            )}
+          <button
+           onClick={handleBuyNow}
+           disabled={product.stock === 0}
+           className={`w-1/2 py-3 font-semibold rounded ${
+           product.stock === 0
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-orange-500 hover:bg-orange-600 text-white'
+          }`}
+          >
+        {product.stock === 0 ? 'Out of Stock ❌' : '⚡ Buy Now'}
+      </button>
+       </div>
 
             {/* Offer Button */}
             {renderOfferButton()}
@@ -222,6 +249,14 @@ const handleBuyNow = () => {
               ₹{product.price}
             </p>
             <p className="text-green-600 text-sm mb-4">Inclusive of all taxes</p>
+
+             {product.stock === 0 ? (
+              <p className="text-red-500 font-semibold text-sm mb-4">❌ Out of Stock</p>
+               ) : product.stock <= 5 ? (
+              <p className="text-orange-500 font-semibold text-sm mb-4">⚠️ Sirf {product.stock} bacha hai!</p>
+              ) : (
+              <p className="text-green-600 font-semibold text-sm mb-4">✅ In Stock</p>
+            )}
 
             <div className="border rounded p-4 mb-5 bg-gray-50">
               <h3 className="font-semibold mb-2">Available Offers</h3>

@@ -1,9 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 
-// @desc    Create new order
-// @route   POST /api/orders
-// @access  Private
 const createOrder = async (req, res) => {
   try {
     const {
@@ -23,13 +20,28 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Update stock for each product
+    
     for (let item of orderItems) {
       const product = await Product.findById(item.product);
-      if (product) {
-        product.stock -= item.quantity;
-        await product.save();
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Product not found: ${item.name}`,
+        });
       }
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `"${product.name}" mein sirf ${product.stock} items available hain!`,
+        });
+      }
+    }
+
+    
+    for (let item of orderItems) {
+      const product = await Product.findById(item.product);
+      product.stock -= item.quantity;
+      await product.save();
     }
 
     const order = await Order.create({
@@ -55,9 +67,6 @@ const createOrder = async (req, res) => {
   }
 };
 
-// @desc    Get logged in user orders
-// @route   GET /api/orders/myorders
-// @access  Private
 const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id })
@@ -77,9 +86,7 @@ const getMyOrders = async (req, res) => {
   }
 };
 
-// @desc    Get order by ID
-// @route   GET /api/orders/:id
-// @access  Private
+
 const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -93,7 +100,7 @@ const getOrderById = async (req, res) => {
       });
     }
 
-    // Check if user is authorized to view this order
+    
     if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -113,9 +120,7 @@ const getOrderById = async (req, res) => {
   }
 };
 
-// @desc    Get all orders (Admin)
-// @route   GET /api/orders
-// @access  Private/Admin
+
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find({})
@@ -135,11 +140,16 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-// @desc    Update order status (Admin)
-// @route   PUT /api/orders/:id/status
-// @access  Private/Admin
 const updateOrderStatus = async (req, res) => {
   try {
+    
+    const isAdmin = req.user.role === 'admin';
+    const isSeller = req.user.role === 'seller';
+
+    if (!isAdmin && !isSeller) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
     const { orderStatus, paymentStatus } = req.body;
 
     const order = await Order.findById(req.params.id);
@@ -177,9 +187,7 @@ const updateOrderStatus = async (req, res) => {
 };
 
 
-// @desc    Get spending report
-// @route   GET /api/orders/spending-report
-// @access  Private (user)
+
 const getSpendingReport = async (req, res) => {
   try {
     const orders = await Order.find({ 
@@ -196,10 +204,10 @@ const getSpendingReport = async (req, res) => {
       });
     }
 
-    // Total spent
+    
     const totalSpent = orders.reduce((sum, order) => sum + order.totalPrice, 0);
 
-    // Monthly spending
+    
     const monthlyMap = {};
     orders.forEach((order) => {
       const month = new Date(order.createdAt).toLocaleString('default', {
@@ -214,7 +222,7 @@ const getSpendingReport = async (req, res) => {
       amount,
     }));
 
-    // Category wise spending
+    
     const categoryMap = {};
     orders.forEach((order) => {
       order.orderItems.forEach((item) => {
@@ -249,12 +257,12 @@ const cancelOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // Security: Sirf apna order cancel kar sake
+    
     if (order.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
      
-    // SECURITY CHECK: Agar order pehle se hi Cancelled hai, toh update nahi hoga
+    
     if (order.orderStatus === 'Cancelled') {
       return res.status(400).json({ 
         success: false, 
@@ -262,12 +270,12 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Security: Shipped/Delivered order cancel na ho
+    
     if (order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered') {
       return res.status(400).json({ success: false, message: 'Cannot cancel shipped or delivered orders' });
     }
 
-    // Stock Wapas Add Karo
+    
     for (let item of order.orderItems) {
       const product = await Product.findById(item.product);
       if (product) {
@@ -284,6 +292,32 @@ const cancelOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Seller ke products ke orders
+const getSellerOrders = async (req, res) => {
+  try {
+    // Seller ke apne products ki IDs nikalo
+    const sellerProducts = await Product.find({ seller: req.user._id }).select('_id');
+    const productIds = sellerProducts.map(p => p._id);
+
+    // Sirf unhi orders jo seller ke products contain karte hain
+    const orders = await Order.find({
+      'orderItems.product': { $in: productIds }
+    })
+      .populate('user', 'name email')
+      .populate('orderItems.product', 'name images price')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: orders.length,
+      data: orders,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getMyOrders,
@@ -292,4 +326,5 @@ module.exports = {
   updateOrderStatus,
   getSpendingReport,
   cancelOrder,
+  getSellerOrders,
 };

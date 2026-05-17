@@ -24,11 +24,14 @@ import Checkout from './pages/user/Checkout';
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import GoogleSuccess from './pages/auth/GoogleSuccess';
 
 // Admin Pages
 import Dashboard from './pages/admin/Dashboard';
 import ManageProducts from './pages/admin/ManageProducts';
 import ProductDetails from './pages/user/ProductDetail';
+import AdminUsers from './pages/admin/AdminUsers';
+import SellerOrders from './pages/seller/SellerOrders';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false ,sellerOnly = false }) => {
@@ -98,12 +101,14 @@ function App() {
           />
           
           <Routes>
+            <Route path="/auth/google/success" element={<GoogleSuccess />} />
             {/* Public Routes */}
             <Route path="/" element={<AppLayout><Home /></AppLayout>} />
             <Route path="/products" element={<AppLayout><Products /></AppLayout>} />
             <Route path="/products/:id" element={<AppLayout><ProductDetails/></AppLayout>} />
             <Route path="/login" element={<AppLayout><Login /></AppLayout>} />
             <Route path="/register" element={<AppLayout><Register /></AppLayout>} />
+            
 
             {/* Protected User Routes */}
             <Route
@@ -218,6 +223,17 @@ function App() {
         />
 
         <Route
+           path="/admin/users"
+           element={
+          <ProtectedRoute adminOnly>
+          <AppLayout>
+           <AdminUsers />
+          </AppLayout>
+       </ProtectedRoute>
+       }
+        />
+
+        <Route
          path="/seller/dashboard"
          element={
         <ProtectedRoute sellerOnly>
@@ -234,6 +250,17 @@ function App() {
              <ProtectedRoute sellerOnly>
              <AppLayout>
                <SellerNegotiations />
+             </AppLayout>
+            </ProtectedRoute>
+             }
+          />
+
+          <Route
+             path="/seller/orders"
+             element={
+             <ProtectedRoute sellerOnly>
+             <AppLayout>
+               <SellerOrders />
              </AppLayout>
             </ProtectedRoute>
              }

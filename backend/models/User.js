@@ -42,6 +42,25 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin','seller'],
       default: 'user',
     },
+    sellerRequest: {
+      status: {
+       type: String,
+       enum: ['none', 'pending', 'approved', 'rejected'],
+       default: 'none',
+      },
+     requestedAt: {
+       type: Date,
+      default: null,
+      },
+     reviewedAt: {
+      type: Date,
+      default: null,
+     },
+    rejectionCount: {
+       type: Number,
+        default: 0 
+      },
+     },
     phone: {
       type: String,
       default: '',
@@ -53,9 +72,17 @@ const userSchema = new mongoose.Schema(
       zipCode: { type: String, default: '' },
       country: { type: String, default: 'India' },
     },
+    resetPasswordOtp: {
+     type: String,
+     select: false,
+   },
+   resetPasswordOtpExpiry: {
+    type: Date,
+    select: false,
+   },
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt
+    timestamps: true, 
   }
 );
 

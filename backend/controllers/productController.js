@@ -1,13 +1,11 @@
 const Product = require('../models/Product');
 
-// @desc    Get all products with filters
-// @route   GET /api/products
-// @access  Public
+
 const getProducts = async (req, res) => {
   try {
     const { category, minPrice, maxPrice, search, sort } = req.query;
 
-    let query = { isActive: true };
+    let query = req.user?.role === 'admin' ? {} : { isActive: true };
 
     // Category filter
     if (category && category !== 'All') {
@@ -38,7 +36,9 @@ const getProducts = async (req, res) => {
     else if (sort === 'rating') sortOption = { rating: -1 };
     else sortOption = { createdAt: -1 };
 
-    const products = await Product.find(query).sort(sortOption);
+    const products = await Product.find(query)
+    .populate('seller', 'name email')
+    .sort(sortOption);
 
     res.json({
       success: true,
@@ -53,9 +53,6 @@ const getProducts = async (req, res) => {
   }
 };
 
-// @desc    Get featured products
-// @route   GET /api/products/featured
-// @access  Public
 const getFeaturedProducts = async (req, res) => {
   try {
     const products = await Product.find({ isFeatured: true, isActive: true })
@@ -75,9 +72,7 @@ const getFeaturedProducts = async (req, res) => {
   }
 };
 
-// @desc    Get single product
-// @route   GET /api/products/:id
-// @access  Public
+
 const getProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -101,14 +96,12 @@ const getProduct = async (req, res) => {
   }
 };
 
-// @desc    Create product (Admin)
-// @route   POST /api/products
-// @access  Private/Admin
+
 const createProduct = async (req, res) => {
   try {
     const product = await Product.create({
       ...req.body,
-      seller: req.user._id  // 👈 yeh add karo
+      seller: req.user._id 
     });
 
     res.status(201).json({
@@ -123,9 +116,6 @@ const createProduct = async (req, res) => {
   }
 };
 
-// @desc    Update product (Admin)
-// @route   PUT /api/products/:id
-// @access  Private/Admin
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
@@ -152,9 +142,6 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// @desc    Delete product (Admin)
-// @route   DELETE /api/products/:id
-// @access  Private/Admin
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
