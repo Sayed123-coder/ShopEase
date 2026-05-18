@@ -4,24 +4,22 @@ const upload = require('../middleware/upload');
 const { protect } = require('../middleware/authMiddleware');
 const cloudinary = require('../config/cloudinary');
 
-// @desc    Upload image to Cloudinary
-// @route   POST /api/upload
-// @access  Private
+
 router.post('/', protect, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // Buffer ko Cloudinary pe upload karo
+    
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: 'shopease/products', // Cloudinary mein folder
+          folder: 'shopease/products', 
           transformation: [
-            { width: 800, height: 800, crop: 'limit' }, // Max size
-            { quality: 'auto' }, // Auto quality
-            { fetch_format: 'auto' }, // Auto format (webp, etc)
+            { width: 800, height: 800, crop: 'limit' }, 
+            { quality: 'auto' }, 
+            { fetch_format: 'auto' }, 
           ],
         },
         (error, result) => {
@@ -34,7 +32,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
 
     res.status(200).json({
       success: true,
-      imageUrl: result.secure_url, // HTTPS URL
+      imageUrl: result.secure_url, 
     });
 
   } catch (error) {

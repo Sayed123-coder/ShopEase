@@ -25,14 +25,14 @@ const Navbar = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  // Seller ke liye har 1 minute mein negotiations fetch karo
+  
   useEffect(() => {
     if (isSeller) {
-      getSellerNegotiations(); // login karte hi turant
+      getSellerNegotiations(); 
 
       const interval = setInterval(() => {
         getSellerNegotiations();
-      }, 60000); // har 1 minute
+      }, 60000); // 
 
       return () => clearInterval(interval); // cleanup on logout
     }
@@ -59,7 +59,7 @@ const Navbar = () => {
   useEffect(() => {
   if (isAdmin) {
     fetchPendingProducts();
-    const interval = setInterval(fetchPendingProducts, 60000); // har 1 min
+    const interval = setInterval(fetchPendingProducts, 60000);
     return () => clearInterval(interval);
   }
 }, [isAdmin]);

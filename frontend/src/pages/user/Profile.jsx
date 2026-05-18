@@ -54,7 +54,7 @@ const Profile = () => {
       setFormData(formatted);
       setOriginalData(formatted);
     } catch (error) {
-      toast.error('Profile load nahi ho paya!');
+      toast.error('Failed to load profile!');
     } finally {
       setLoading(false);
     }
@@ -371,7 +371,7 @@ const handleBecomeSeller = async () => {
             </div>
           )}
 
-          {/* Save Button - tabhi dikhega jab change ho */}
+          {/* Save Button - it will apprear only when some information changes */}
           {(isChanged || formData.password) && (
             <div className="mt-6 flex justify-end">
               <button

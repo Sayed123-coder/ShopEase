@@ -37,7 +37,7 @@ const SellerDashboard = () => {
       const { data } = await api.get('/api/seller/products');
       setProducts(data);
     } catch (error) {
-      toast.error('Products load nahi ho paye!');
+      toast.error('Failed to load products!');
     } finally {
       setLoading(false);
     }

@@ -33,12 +33,12 @@ const ManageProducts = () => {
       const { data } = await api.get('/api/products/admin/all');
       setProducts(data.data);
 
-      // Pending aur Active alag karo
+      // Pending & Active 
       const pending = data.data.filter(p => !p.isActive);
       const active = data.data.filter(p => p.isActive);
       setPendingProducts(pending);
 
-      // Sirf active products seller wise group karo
+      // Group only the active products seller wise
       const grouped = {};
       active.forEach(p => {
         const sellerName = p.seller?.name || 'Unknown Seller';
@@ -170,7 +170,7 @@ const ManageProducts = () => {
 
   // Product reject karo
   const handleRejectProduct = async (id) => {
-    if (!window.confirm('Product reject karna chahte ho? Yeh delete ho jaayega!')) return;
+    if (!window.confirm('Do you want to reject this product? It will be deleted!')) return;
     try {
       await api.delete(`/api/admin/products/${id}/reject`);
       toast.success('Product rejected! ❌');

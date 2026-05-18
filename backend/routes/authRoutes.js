@@ -35,7 +35,7 @@ router.get('/google/callback',
     session: true 
   }),
   (req, res) => {
-    console.log('Callback hit! User:', req.user); // 👈 check karo
+    console.log('Callback hit! User:', req.user); 
     
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRE,

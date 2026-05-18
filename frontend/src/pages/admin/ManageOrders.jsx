@@ -126,8 +126,8 @@ const ManageOrders = () => {
                      <>
                   <select
                    value={order.orderStatus}
-        onChange={(e) => handleStatusUpdate(order._id, e.target.value, null)}
-        className="border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                   onChange={(e) => handleStatusUpdate(order._id, e.target.value, null)}
+                   className="border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   >
                   <option value="Pending">Pending</option>
                   <option value="Processing">Processing</option>

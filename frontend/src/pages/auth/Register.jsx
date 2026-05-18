@@ -20,7 +20,7 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Step 1 — Validate form aur OTP bhejo
+
   const handleSendOtp = async (e) => {
     e.preventDefault();
 
@@ -49,10 +49,10 @@ const Register = () => {
     }
   };
 
-  // Step 2 — OTP verify karke account banao
+  
   const handleVerifyOtp = async () => {
     if (!otp || otp.length !== 6) {
-      toast.error('6 digit OTP daalo!');
+      toast.error('Enter six digit OTP!');
       return;
     }
     setOtpLoading(true);
@@ -62,8 +62,8 @@ const Register = () => {
         otp,
       });
 
-      // AuthContext mein user set karo
-      await register(null, null, null, data.data); // token aur user data pass karo
+      
+      await register(null, null, null, data.data); 
       toast.success('Account created successfully! 🎉');
       navigate('/');
     } catch (error) {
@@ -226,13 +226,13 @@ const Register = () => {
                       disabled={loading}
                       className="text-sm text-primary-600 hover:underline block w-full"
                     >
-                      {loading ? 'Resending...' : 'OTP nahi aaya? Dobara bhejo'}
+                      {loading ? 'Resending...' : 'Resend OTP'}
                     </button>
                     <button
                       onClick={() => { setStep(1); setOtp(''); }}
                       className="text-sm text-gray-500 hover:underline block w-full"
                     >
-                      ← Email badalna hai? Wapas jao
+                      ← Change email
                     </button>
                   </div>
                 </div>

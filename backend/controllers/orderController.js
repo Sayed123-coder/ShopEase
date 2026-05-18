@@ -293,14 +293,14 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-// Seller ke products ke orders
+
 const getSellerOrders = async (req, res) => {
   try {
-    // Seller ke apne products ki IDs nikalo
+    
     const sellerProducts = await Product.find({ seller: req.user._id }).select('_id');
     const productIds = sellerProducts.map(p => p._id);
 
-    // Sirf unhi orders jo seller ke products contain karte hain
+    
     const orders = await Order.find({
       'orderItems.product': { $in: productIds }
     })

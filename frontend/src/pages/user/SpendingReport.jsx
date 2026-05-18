@@ -27,7 +27,7 @@ const SpendingReport = () => {
       const { data } = await api.get('/api/orders/spending-report');
       setReport(data);
     } catch (error) {
-      toast.error('Report load nahi ho pa rahi!');
+      toast.error('Failed to load report!');
     } finally {
       setLoading(false);
     }

@@ -46,7 +46,7 @@ const Login = () => {
   // Step 1 — OTP bhejo
   const handleSendOtp = async () => {
     if (!forgotEmail) {
-      toast.error('Email daalo!');
+      toast.error('Enter Email!');
       return;
     }
     setForgotLoading(true);
@@ -64,15 +64,15 @@ const Login = () => {
   // Step 2 — Reset Password
   const handleResetPassword = async () => {
     if (!otp || !newPassword || !confirmNewPassword) {
-      toast.error('Sab fields fill karo!');
+      toast.error('Please fill all the fields!');
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      toast.error('Passwords match nahi kar rahe!');
+      toast.error('Password do not match!');
       return;
     }
     if (newPassword.length < 6) {
-      toast.error('Password kam se kam 6 characters ka hona chahiye!');
+      toast.error('Password should be atleast of 6 characters !');
       return;
     }
     setForgotLoading(true);
@@ -82,7 +82,7 @@ const Login = () => {
         otp,
         newPassword,
       });
-      toast.success('Password reset ho gaya! Ab login karo 🎉');
+      toast.success('Password reset sucessfully! Please login again🎉');
       setShowForgotModal(false);
       setForgotStep(1);
       setForgotEmail('');
@@ -292,7 +292,7 @@ const Login = () => {
                     onClick={() => setForgotStep(1)}
                     className="w-full text-sm text-primary-600 hover:underline"
                   >
-                    OTP nahi aaya? Dobara bhejo
+                    Resend OTP
                   </button>
                 </div>
               )}

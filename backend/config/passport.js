@@ -15,15 +15,15 @@ passport.use(new GoogleStrategy({
   callbackURL:`${process.env.BACKEND_URL}/api/auth/google/callback`,
 }, async (accessToken, refreshToken, profile, done) => {
   try {
-    // Pehle check karo user exist karta hai ya nahi
+    
     let user = await User.findOne({ email: profile.emails[0].value });
 
     if (user) {
-      // Already exists — seedha login
+      
       return done(null, user);
     }
 
-    // Nahi hai — naya user banao
+    
     user = await User.create({
       name: profile.displayName,
       email: profile.emails[0].value,

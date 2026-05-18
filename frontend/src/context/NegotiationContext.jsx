@@ -17,7 +17,7 @@ export const NegotiationProvider = ({ children }) => {
   const [negotiations, setNegotiations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [pendingCount, setPendingCount] = useState(0); // ✅ andar hai
+  const [pendingCount, setPendingCount] = useState(0); 
 
   // User offer bheje
   const makeOffer = async (productId, offeredPrice, message) => {

@@ -32,7 +32,7 @@ const Products = () => {
     'Computers',
   ];
 
-  // Pehle wale useEffect ke upar yeh add karo
+  
 useEffect(() => {
   const searchFromUrl = searchParams.get('search') || '';
   const categoryFromUrl = searchParams.get('category') || 'All';

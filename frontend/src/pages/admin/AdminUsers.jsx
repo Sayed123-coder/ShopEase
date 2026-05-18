@@ -23,7 +23,7 @@ const AdminUsers = () => {
       const { data } = await api.get('/api/admin/users');
       setUsers(data.data);
     } catch (error) {
-      toast.error('Users load nahi ho paye!');
+      toast.error('Fail to load users!');
     } finally {
       setLoading(false);
     }
@@ -34,7 +34,7 @@ const AdminUsers = () => {
   }, []);
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`"${name}" ka poora account delete karna chahte ho?`)) return;
+    if (!window.confirm(`Do you want to delete tha account of?"${name}" `)) return;
     setDeletingId(id);
     try {
       await api.delete(`/api/admin/users/${id}`);
@@ -48,7 +48,7 @@ const AdminUsers = () => {
   };
 
   const handleRemoveSeller = async (id, name) => {
-    if (!window.confirm(`"${name}" ka seller access remove karna chahte ho?`)) return;
+    if (!window.confirm(`Do you want to remove seller acees of?"${name}"`)) return;
     setUpdatingId(id);
     try {
       await api.put(`/api/admin/users/${id}/role`, { role: 'user' });

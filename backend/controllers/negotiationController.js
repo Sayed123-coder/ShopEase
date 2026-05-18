@@ -87,7 +87,7 @@ const respondToOffer = async (req, res) => {
       return res.status(404).json({ message: 'Negotiation not found' });
     }
 
-    // Admin ya product ka seller respond kar sake
+    
     const isAdmin = req.user.role === 'admin';
     const isSeller = negotiation.product.seller._id.toString() === req.user._id.toString();
 
@@ -134,12 +134,10 @@ const rejectCounter = async (req, res) => {
   }
 };
 
-// @desc    Seller apne products ki negotiations dekhe
-// @route   GET /api/negotiations/seller
-// @access  Private (seller)
+
 const getSellerNegotiations = async (req, res) => {
   try {
-    // Pehle seller ke products find karo
+    
     const sellerProducts = await Product.find({ seller: req.user._id });
     const productIds = sellerProducts.map(p => p._id);
 

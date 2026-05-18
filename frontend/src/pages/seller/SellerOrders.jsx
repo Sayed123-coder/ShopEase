@@ -28,7 +28,7 @@ const SellerOrders = () => {
       const { data } = await api.get('/api/orders/seller-orders');
       setOrders(data.data);
     } catch (error) {
-      toast.error('Orders load nahi ho paye!');
+      toast.error('Failed to load orders!');
     } finally {
       setLoading(false);
     }
