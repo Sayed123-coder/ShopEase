@@ -35,8 +35,8 @@ const Cart = () => {
 
   const subtotal = getCartTotal();
   const shipping = subtotal > 500 ? 0 : 50;
-  const tax = subtotal * 0.18;
-  const total = subtotal + shipping + tax;
+  const tax = 0;
+  const total = subtotal + shipping ;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -118,10 +118,6 @@ const Cart = () => {
                   <span className="font-semibold">
                     {shipping === 0 ? 'FREE' : `₹${shipping}`}
                   </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (18%)</span>
-                  <span className="font-semibold">₹{tax.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-4 flex justify-between text-lg font-bold">
                   <span>Total</span>
