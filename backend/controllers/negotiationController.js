@@ -89,7 +89,7 @@ const respondToOffer = async (req, res) => {
 
     // Admin ya product ka seller respond kar sake
     const isAdmin = req.user.role === 'admin';
-    const isSeller = negotiation.product.seller.toString() === req.user._id.toString();
+    const isSeller = negotiation.product.seller._id.toString() === req.user._id.toString();
 
     if (!isAdmin && !isSeller) {
       return res.status(403).json({ message: 'Not authorized' });
