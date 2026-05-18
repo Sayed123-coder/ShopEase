@@ -24,7 +24,7 @@ router.get('/all', protect,isAdmin, getAllNegotiations);
 // Seller apni negotiations dekhe
 router.get('/seller', protect,isSeller , getSellerNegotiations);
 
-router.put('/:id', protect, isAdmin, respondToOffer);
+router.put('/:id', protect, respondToOffer);
 
 router.put('/:id/reject-counter', protect, rejectCounter);
 
