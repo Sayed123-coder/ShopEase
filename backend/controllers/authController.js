@@ -225,6 +225,8 @@ const sendRegisterOtp = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
+    await TempOtp.deleteOne({ email });
+    
     await TempOtp.create({ name, email, password, otp, otpExpiry });
 
     await resend.emails.send({
