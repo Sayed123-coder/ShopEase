@@ -1,20 +1,20 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const TempOtp=require("../models/TempOtp.js");
+const TempOtp = require("../models/TempOtp.js");
+const { Resend } = require('resend');
 
-// Generate JWT Token
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
 
-
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({
@@ -23,7 +23,6 @@ const register = async (req, res) => {
       });
     }
 
-    // Create user
     const user = await User.create({
       name,
       email,
@@ -50,12 +49,10 @@ const register = async (req, res) => {
   }
 };
 
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check for user
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
@@ -65,7 +62,6 @@ const login = async (req, res) => {
       });
     }
 
-    // Check password
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -93,7 +89,6 @@ const login = async (req, res) => {
   }
 };
 
-
 const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -110,7 +105,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-
 const updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -119,7 +113,7 @@ const updateProfile = async (req, res) => {
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
       user.phone = req.body.phone || user.phone;
-      
+
       if (req.body.address) {
         user.address = { ...user.address, ...req.body.address };
       }
@@ -151,19 +145,6 @@ const updateProfile = async (req, res) => {
   }
 };
 
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
-
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, 
-  },
-});
-
-
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -173,17 +154,15 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No account found with this email!' });
     }
 
-    
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); 
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     user.resetPasswordOtp = otp;
     user.resetPasswordOtpExpiry = otpExpiry;
     await user.save();
 
-    
-    await transporter.sendMail({
-      from: `"ShopEase" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: 'ShopEase <onboarding@resend.dev>',
       to: user.email,
       subject: 'ShopEase Password Reset OTP',
       html: `
@@ -205,7 +184,6 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-
 const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -216,17 +194,14 @@ const resetPassword = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found!' });
     }
 
-   
     if (user.resetPasswordOtp !== otp) {
       return res.status(400).json({ success: false, message: 'Invalid OTP!' });
     }
 
-   
     if (user.resetPasswordOtpExpiry < new Date()) {
       return res.status(400).json({ success: false, message: 'OTP expired! Please request again.' });
     }
 
-    
     user.password = newPassword;
     user.resetPasswordOtp = undefined;
     user.resetPasswordOtpExpiry = undefined;
@@ -238,31 +213,22 @@ const resetPassword = async (req, res) => {
   }
 };
 
-
 const sendRegisterOtp = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-   
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'Email already registered!' });
     }
 
-    
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    await TempOtp.create({
-      name,
-      email,
-      password,
-      otp,
-      otpExpiry,
-    });
+    await TempOtp.create({ name, email, password, otp, otpExpiry });
 
-    await transporter.sendMail({
-      from: `"ShopEase" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: 'ShopEase <onboarding@resend.dev>',
       to: email,
       subject: 'ShopEase - Verify Your Email',
       html: `
@@ -284,7 +250,6 @@ const sendRegisterOtp = async (req, res) => {
   }
 };
 
-
 const verifyRegisterOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -304,14 +269,12 @@ const verifyRegisterOtp = async (req, res) => {
       return res.status(400).json({ success: false, message: 'OTP expired! Register again.' });
     }
 
-    
     const user = await User.create({
       name: tempUser.name,
       email: tempUser.email,
       password: tempUser.password,
     });
 
-    
     await TempOtp.deleteOne({ email });
 
     res.status(201).json({
@@ -334,8 +297,8 @@ module.exports = {
   login,
   getProfile,
   updateProfile,
-  forgotPassword, 
+  forgotPassword,
   resetPassword,
-  sendRegisterOtp,  
-  verifyRegisterOtp, 
+  sendRegisterOtp,
+  verifyRegisterOtp,
 };
