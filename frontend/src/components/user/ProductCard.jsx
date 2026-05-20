@@ -1,16 +1,28 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiStar } from 'react-icons/fi';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiShoppingCart, FiStar, FiCheck } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext';
 import toast from 'react-hot-toast';
 
 const ProductCard = ({ product }) => {
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
+  const navigate = useNavigate();
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
+  // Check karo product cart mein hai ya nahi
+  const isInCart = cartItems.some(item => item._id === product._id);
+
+  const handleCartAction = (e) => {
+    e.preventDefault(); // Link navigate rok
+    if (isInCart) {
+      navigate('/cart');
+      return;
+    }
+    if (product.stock === 0) {
+      toast.error('Product out of stock! ❌');
+      return;
+    }
     addToCart(product);
-    toast.success('Added to cart!');
+    toast.success('Added to cart! 🛒');
   };
 
   const discount = product.originalPrice
@@ -28,7 +40,7 @@ const ProductCard = ({ product }) => {
       <Link to={`/products/${product._id}`} className="block h-full">
         <div className="card group overflow-hidden flex flex-col h-full">
 
-          {/* Image - Fixed Height */}
+          {/* Image */}
           <div className="relative overflow-hidden bg-white h-56 flex-shrink-0">
             <img
               src={product.images?.[0]}
@@ -52,7 +64,7 @@ const ProductCard = ({ product }) => {
             )}
           </div>
 
-          {/* Content - Flex Grow */}
+          {/* Content */}
           <div className="p-4 flex flex-col flex-grow">
             {/* Brand & Rating */}
             <div className="flex items-center justify-between mb-2">
@@ -82,19 +94,38 @@ const ProductCard = ({ product }) => {
               )}
             </div>
 
-            {/* Add to Cart Button */}
+            {/* Cart Button - 3 states */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-              className="w-full btn-primary flex items-center justify-center space-x-2"
+              onClick={handleCartAction}
+              disabled={product.stock === 0 && !isInCart}
+              className={`w-full flex items-center justify-center space-x-2 py-2 px-4 rounded-lg font-semibold transition-all duration-200
+                ${product.stock === 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'          // Out of Stock
+                  : isInCart
+                  ? 'bg-green-500 hover:bg-green-600 text-white'            // Go to Cart
+                  : 'btn-primary'                                            // Add to Cart
+                }`}
             >
-              <FiShoppingCart />
-              <span>{product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+              {product.stock === 0 ? (
+                <>
+                  <span>Out of Stock ❌</span>
+                </>
+              ) : isInCart ? (
+                <>
+                  <FiCheck />
+                  <span>Go to Cart</span>
+                </>
+              ) : (
+                <>
+                  <FiShoppingCart />
+                  <span>Add to Cart</span>
+                </>
+              )}
             </motion.button>
-          </div>
 
+          </div>
         </div>
       </Link>
     </motion.div>

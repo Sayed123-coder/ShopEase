@@ -67,13 +67,13 @@ const ProductDetails = () => {
       setShowModal(false);
       setOfferedPrice('');
       setMessage('');
-      fetchNegotiationStatus(); // status refresh karo
+      fetchNegotiationStatus(); 
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong');
     }
   };
 
-  // Offer button render karo status ke hisaab se
+ 
   const renderOfferButton = () => {
     if (offerCount >= 3) {
       return (
@@ -253,7 +253,7 @@ const handleBuyNow = () => {
              {product.stock === 0 ? (
               <p className="text-red-500 font-semibold text-sm mb-4">❌ Out of Stock</p>
                ) : product.stock <= 5 ? (
-              <p className="text-orange-500 font-semibold text-sm mb-4">⚠️ Sirf {product.stock} bacha hai!</p>
+              <p className="text-orange-500 font-semibold text-sm mb-4">⚠️ Only {product.stock} left!</p>
               ) : (
               <p className="text-green-600 font-semibold text-sm mb-4">✅ In Stock</p>
             )}
