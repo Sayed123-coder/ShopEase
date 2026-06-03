@@ -171,7 +171,7 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     await transporter.sendMail({
-      from: '"ShopEase" <' + process.env.BREVO_SMTP_USER + '>',
+      from: '"ShopEase" <' + process.env.BREVO_SMTP_SENDER + '>',
       to: user.email,
       subject: 'ShopEase Password Reset OTP',
       html: `
@@ -238,7 +238,7 @@ const sendRegisterOtp = async (req, res) => {
     await TempOtp.create({ name, email, password, otp, otpExpiry });
 
     await transporter.sendMail({
-      from: '"ShopEase" <' + process.env.BREVO_SMTP_USER + '>',
+      from: '"ShopEase" <' + process.env.BREVO_SMTP_SENDER + '>',
       to: email,
       subject: 'ShopEase - Verify Your Email',
       html: `
