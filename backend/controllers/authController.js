@@ -1,9 +1,16 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const TempOtp = require("../models/TempOtp.js");
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: process.env.BREVO_SMTP_HOST,
+  port: process.env.BREVO_SMTP_PORT,
+  auth: {
+    user: process.env.BREVO_SMTP_USER,
+    pass: process.env.BREVO_SMTP_PASS,
+  },
+});
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -161,8 +168,8 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordOtpExpiry = otpExpiry;
     await user.save();
 
-    await resend.emails.send({
-      from: 'ShopEase <onboarding@resend.dev>',
+    await transporter.sendMail({
+      from: '"ShopEase" <' + process.env.BREVO_SMTP_USER + '>',
       to: user.email,
       subject: 'ShopEase Password Reset OTP',
       html: `
@@ -226,11 +233,10 @@ const sendRegisterOtp = async (req, res) => {
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     await TempOtp.deleteOne({ email });
-    
     await TempOtp.create({ name, email, password, otp, otpExpiry });
 
-    await resend.emails.send({
-      from: 'ShopEase <onboarding@resend.dev>',
+    await transporter.sendMail({
+      from: '"ShopEase" <' + process.env.BREVO_SMTP_USER + '>',
       to: email,
       subject: 'ShopEase - Verify Your Email',
       html: `
