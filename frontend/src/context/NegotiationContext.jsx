@@ -14,10 +14,12 @@ export const useNegotiation = () => {
 };
 
 export const NegotiationProvider = ({ children }) => {
-  const [negotiations, setNegotiations] = useState([]);
+  const [negotiations, setNegotiations] = useState([]);           // User ki apni negotiations
+  const [sellerNegotiations, setSellerNegotiations] = useState([]); // Seller ki negotiations
+  const [adminNegotiations, setAdminNegotiations] = useState([]);   // Admin ki negotiations
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [pendingCount, setPendingCount] = useState(0); 
+  const [pendingCount, setPendingCount] = useState(0);
 
   // User offer bheje
   const makeOffer = async (productId, offeredPrice, message) => {
@@ -37,7 +39,7 @@ export const NegotiationProvider = ({ children }) => {
     }
   };
 
-  // User apni negotiations dekhe
+  // User apni negotiations dekhe — sirf user state update hogi
   const getMyNegotiations = async () => {
     try {
       setLoading(true);
@@ -50,12 +52,12 @@ export const NegotiationProvider = ({ children }) => {
     }
   };
 
-  // Admin sabki negotiations dekhe
+  // Admin sabki negotiations dekhe — sirf admin state update hogi
   const getAllNegotiations = async () => {
     try {
       setLoading(true);
       const { data } = await api.get('/api/negotiations/all');
-      setNegotiations(data);
+      setAdminNegotiations(data);
     } catch (error) {
       setError(error.response?.data?.message || 'Something went wrong');
     } finally {
@@ -71,9 +73,10 @@ export const NegotiationProvider = ({ children }) => {
         status,
         counterPrice,
       });
-      setNegotiations((prev) =>
-        prev.map((n) => (n._id === id ? data : n))
-      );
+      // Teeno states mein update karo jahan bhi match kare
+      setNegotiations((prev) => prev.map((n) => (n._id === id ? data : n)));
+      setSellerNegotiations((prev) => prev.map((n) => (n._id === id ? data : n)));
+      setAdminNegotiations((prev) => prev.map((n) => (n._id === id ? data : n)));
       return data;
     } catch (error) {
       setError(error.response?.data?.message || 'Something went wrong');
@@ -99,9 +102,7 @@ export const NegotiationProvider = ({ children }) => {
     try {
       setLoading(true);
       const { data } = await api.put(`/api/negotiations/${id}/reject-counter`);
-      setNegotiations((prev) =>
-        prev.map((n) => (n._id === id ? data : n))
-      );
+      setNegotiations((prev) => prev.map((n) => (n._id === id ? data : n)));
       return data;
     } catch (error) {
       setError(error.response?.data?.message || 'Something went wrong');
@@ -111,12 +112,12 @@ export const NegotiationProvider = ({ children }) => {
     }
   };
 
-  // ✅ Sirf ek getSellerNegotiations — pendingCount ke saath
+  // Seller ki negotiations — sirf seller state update hogi, user state safe rahegi
   const getSellerNegotiations = async () => {
     try {
       setLoading(true);
       const { data } = await api.get('/api/negotiations/seller');
-      setNegotiations(data);
+      setSellerNegotiations(data);
       const pending = data.filter(n => n.status === 'Pending').length;
       setPendingCount(pending);
     } catch (error) {
@@ -127,7 +128,9 @@ export const NegotiationProvider = ({ children }) => {
   };
 
   const value = {
-    negotiations,
+    negotiations,           // User ki apni negotiations (MyNegotiations page)
+    sellerNegotiations,     // Seller ki negotiations (SellerNegotiations page)
+    adminNegotiations,      // Admin ki negotiations (AdminNegotiations page)
     loading,
     error,
     pendingCount,

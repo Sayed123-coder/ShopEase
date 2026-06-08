@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#f0f9ff',
+          50:  '#f0f9ff',
           100: '#e0f2fe',
           200: '#bae6fd',
           300: '#7dd3fc',
@@ -20,7 +20,7 @@ export default {
           900: '#0c4a6e',
         },
         secondary: {
-          50: '#fdf4ff',
+          50:  '#fdf4ff',
           100: '#fae8ff',
           200: '#f5d0fe',
           300: '#f0abfc',

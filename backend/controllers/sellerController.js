@@ -30,13 +30,14 @@ const becomeSeller = async (req, res) => {
 
 const addProduct = async (req, res) => {
   try {
-    const { name, description, price, category, brand, stock, images } = req.body;
+    const { name, description, price,originalPrice,category, brand, stock, images } = req.body;
 
     const product = await Product.create({
       name,
       seller: req.user._id,
       description,
       price,
+      originalPrice,
       category,
       brand,
       stock,

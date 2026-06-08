@@ -8,11 +8,10 @@ const ProductCard = ({ product }) => {
   const { addToCart, cartItems } = useCart();
   const navigate = useNavigate();
 
-  // Check karo product cart mein hai ya nahi
   const isInCart = cartItems.some(item => item._id === product._id);
 
   const handleCartAction = (e) => {
-    e.preventDefault(); // Link navigate rok
+    e.preventDefault();
     if (isInCart) {
       navigate('/cart');
       return;
@@ -33,15 +32,15 @@ const ProductCard = ({ product }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.25 }}
       className="h-full"
     >
       <Link to={`/products/${product._id}`} className="block h-full">
-        <div className="card group overflow-hidden flex flex-col h-full">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full group">
 
           {/* Image */}
-          <div className="relative overflow-hidden bg-white h-56 flex-shrink-0">
+          <div className="relative overflow-hidden bg-gray-50 h-52 flex-shrink-0">
             <img
               src={product.images?.[0]}
               alt={product.name}
@@ -51,15 +50,21 @@ const ProductCard = ({ product }) => {
               }}
             />
             {discount > 0 && (
-              <div className="absolute top-2 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+              <div className="absolute top-3 left-3 bg-red-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold">
                 {discount}% OFF
               </div>
             )}
             {product.stock === 0 && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="bg-red-500 text-white px-4 py-1.5 rounded-lg font-bold text-sm">
                   Out of Stock
                 </span>
+              </div>
+            )}
+            {/* Wishlist hint on hover */}
+            {product.stock > 0 && product.stock <= 5 && (
+              <div className="absolute top-3 right-3 bg-orange-500 text-white px-2 py-0.5 rounded-lg text-xs font-semibold">
+                Only {product.stock} left!
               </div>
             )}
           </div>
@@ -68,63 +73,54 @@ const ProductCard = ({ product }) => {
           <div className="p-4 flex flex-col flex-grow">
             {/* Brand & Rating */}
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-primary-600 uppercase">
+              <span className="text-xs font-semibold text-primary-600 uppercase tracking-wide">
                 {product.brand || product.category}
               </span>
-              <div className="flex items-center space-x-1 text-yellow-500">
-                <FiStar className="fill-current" size={14} />
-                <span className="text-xs text-gray-600">{product.rating.toFixed(1)}</span>
+              <div className="flex items-center gap-1">
+                <FiStar className="fill-amber-400 text-amber-400" size={13} />
+                <span className="text-xs text-gray-500 font-medium">{product.rating.toFixed(1)}</span>
               </div>
             </div>
 
             {/* Product Name */}
-            <h3 className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
+            <h3 className="font-semibold text-gray-800 mb-3 line-clamp-2 text-sm leading-snug group-hover:text-primary-600 transition-colors">
               {product.name}
             </h3>
 
             {/* Price */}
-            <div className="flex items-center space-x-2 mb-4 mt-auto">
-              <span className="text-2xl font-bold text-gray-900">
+            <div className="flex items-baseline gap-2 mb-4 mt-auto">
+              <span className="text-xl font-bold text-gray-900">
                 ₹{product.price.toLocaleString()}
               </span>
               {product.originalPrice > 0 && (
-                <span className="text-sm text-gray-500 line-through">
+                <span className="text-sm text-gray-400 line-through">
                   ₹{product.originalPrice.toLocaleString()}
                 </span>
               )}
             </div>
 
-            {/* Cart Button - 3 states */}
+            {/* Cart Button */}
             <motion.button
               whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.97 }}
               onClick={handleCartAction}
               disabled={product.stock === 0 && !isInCart}
-              className={`w-full flex items-center justify-center space-x-2 py-2 px-4 rounded-lg font-semibold transition-all duration-200
+              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200
                 ${product.stock === 0
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'          // Out of Stock
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : isInCart
-                  ? 'bg-green-500 hover:bg-green-600 text-white'            // Go to Cart
-                  : 'btn-primary'                                            // Add to Cart
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  : 'btn-primary'
                 }`}
             >
               {product.stock === 0 ? (
-                <>
-                  <span>Out of Stock ❌</span>
-                </>
+                <span>Out of Stock</span>
               ) : isInCart ? (
-                <>
-                  <FiCheck />
-                  <span>Go to Cart</span>
-                </>
+                <><FiCheck size={15} /><span>Go to Cart</span></>
               ) : (
-                <>
-                  <FiShoppingCart />
-                  <span>Add to Cart</span>
-                </>
+                <><FiShoppingCart size={15} /><span>Add to Cart</span></>
               )}
             </motion.button>
-
           </div>
         </div>
       </Link>

@@ -34,8 +34,7 @@ router.get('/google/callback',
     failureRedirect: `${process.env.CLIENT_URL}/login`,
     session: true 
   }),
-  (req, res) => {
-    console.log('Callback hit! User:', req.user); 
+  (req, res) => { 
     
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRE,
@@ -51,7 +50,6 @@ router.get('/google/callback',
 
     const encodedUser = encodeURIComponent(JSON.stringify(userData));
     const redirectUrl = `${process.env.CLIENT_URL}/auth/google/success?user=${encodedUser}`;
-    console.log('Redirecting to:', redirectUrl);
     res.redirect(redirectUrl);
   }
 );

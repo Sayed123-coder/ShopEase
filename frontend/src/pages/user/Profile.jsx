@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiCheck, FiSave } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
 const Profile = () => {
@@ -17,18 +19,12 @@ const Profile = () => {
     phone: '',
     gender: '',
     dateOfBirth: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: 'India',
-    },
+    address: { street: '', city: '', state: '', zipCode: '', country: 'India' },
     password: '',
     confirmPassword: '',
   });
 
-  const avatarUrl = `https://ui-avatars.com/api/?name=${formData.name || 'User'}&background=6366f1&color=fff&size=128`;
+  const avatarUrl = `https://ui-avatars.com/api/?name=${formData.name || 'User'}&background=0284c7&color=fff&size=128`;
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -60,9 +56,7 @@ const Profile = () => {
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useEffect(() => { fetchProfile(); }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,7 +80,6 @@ const Profile = () => {
       toast.error('Passwords do not match!');
       return;
     }
-
     setSaving(true);
     try {
       const payload = {
@@ -97,16 +90,10 @@ const Profile = () => {
         dateOfBirth: formData.dateOfBirth,
         address: formData.address,
       };
-
-      if (formData.password) {
-        payload.password = formData.password;
-      }
-
+      if (formData.password) payload.password = formData.password;
       const { data } = await api.put('/api/auth/profile', payload);
       updateUser(data.data);
       toast.success('Profile updated successfully! ✅');
-
-      // Reset
       setIsChanged(false);
       setOriginalData({ ...formData, password: '', confirmPassword: '' });
       setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }));
@@ -117,146 +104,169 @@ const Profile = () => {
     }
   };
 
+  const handleBecomeSeller = async () => {
+    try {
+      await api.put('/api/seller/become-seller');
+      updateUser({ ...authUser, sellerRequest: { status: 'pending' } });
+      toast.success('Request submitted! Admin will review it. ⏳');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Something went wrong!');
+    }
+  };
 
-const handleBecomeSeller = async () => {
-  try {
-    await api.put('/api/seller/become-seller');
-    
-    updateUser({ 
-      ...authUser, 
-      sellerRequest: { status: 'pending' } 
-    });
-    toast.success('Request submitted! Admin will review it. ⏳');
-  } catch (error) {
-    toast.error(error.response?.data?.message || 'Something went wrong!');
+  const tabs = [
+    { id: 'basic',    label: 'Basic Info',  icon: <FiUser size={14} />    },
+    { id: 'address',  label: 'Address',     icon: <FiMapPin size={14} />  },
+    { id: 'security', label: 'Security',    icon: <FiLock size={14} />    },
+  ];
+
+  const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white text-sm transition-all";
+  const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="loading-spinner"></div>
+      </div>
+    );
   }
-};
-
-  if (loading) return <div className="text-center py-10">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50">
 
-        {/* Profile Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 mb-6 text-white">
-          <div className="flex items-center gap-5">
-            <img
-              src={avatarUrl}
-              alt="avatar"
-              className="w-20 h-20 rounded-full border-4 border-white shadow-lg"
-            />
-            <div>
-              <h1 className="text-2xl font-bold">{formData.name || 'User'}</h1>
-              <p className="text-indigo-200 text-sm">{formData.email}</p>
-              <span className="mt-1 inline-block bg-white text-indigo-600 text-xs font-semibold px-3 py-1 rounded-full">
-                {authUser?.role === 'admin' ? '👑 Admin' : authUser?.role === 'seller' ? '🏪 Seller' : '🛒 Shopper'}
-              </span>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="container-custom py-6">
+          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+          <p className="text-gray-400 text-sm mt-1">Manage your account information</p>
+        </div>
+      </div>
 
-            
-              {/* Become Seller section */}
-               {authUser?.role === 'user' && (
-              <>
-              {authUser?.sellerRequest?.status === 'pending' ? (
-             <div className="mt-3 inline-block bg-yellow-100 text-yellow-700 text-xs font-semibold px-4 py-1.5 rounded-full">
-               ⏳ Seller Request Pending...
-             </div>
-             ) : authUser?.sellerRequest?.rejectionCount >= 3 ? (
-            <div className="mt-3 inline-block bg-red-100 text-red-700 text-xs font-semibold px-4 py-1.5 rounded-full">
-              🚫 Permanently Blocked (3/3 attempts used)
-           </div>
-           ) : authUser?.sellerRequest?.status === 'rejected' ? (
-           <div className="flex flex-col gap-1 mt-3">
-              <span className="text-xs text-red-300">
-               ❌ Rejected ({authUser?.sellerRequest?.rejectionCount}/3 attempts used)
-            </span>
-           <button
-            onClick={handleBecomeSeller}
-             className="bg-white text-purple-600 hover:bg-purple-50 text-xs font-semibold px-4 py-1.5 rounded-full transition-all"
-            >
-           🏪 Apply Again
-           </button>
-          </div>
-            ) : (
-           <button
-           onClick={handleBecomeSeller}
-             className="mt-3 block bg-white text-purple-600 hover:bg-purple-50 text-xs font-semibold px-4 py-1.5 rounded-full transition-all"
-            >
-           🏪 Become a Seller
-          </button>
-           )}
-         </>
-          )}
+      <div className="container-custom py-8 max-w-4xl">
+
+        {/* Profile Card */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+
+            {/* Avatar */}
+            <div className="relative flex-shrink-0">
+              <img
+                src={avatarUrl}
+                alt="avatar"
+                className="w-20 h-20 rounded-2xl border-2 border-primary-100 shadow-sm"
+              />
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-600 rounded-lg flex items-center justify-center">
+                <FiCheck size={12} className="text-white" />
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-xl font-bold text-gray-900">{formData.name || 'User'}</h2>
+              <p className="text-gray-400 text-sm mt-0.5">{formData.email}</p>
+              <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+                <span className="inline-flex items-center gap-1.5 bg-primary-50 text-primary-700 text-xs font-semibold px-3 py-1 rounded-full border border-primary-100">
+                  {authUser?.role === 'admin' ? '👑 Admin' : authUser?.role === 'seller' ? '🏪 Seller' : '🛒 Shopper'}
+                </span>
+
+                {/* Become Seller section */}
+                {authUser?.role === 'user' && (
+                  <>
+                    {authUser?.sellerRequest?.status === 'pending' ? (
+                      <span className="inline-flex items-center gap-1.5 bg-yellow-50 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full border border-yellow-200">
+                        ⏳ Seller Request Pending...
+                      </span>
+                    ) : authUser?.sellerRequest?.rejectionCount >= 3 ? (
+                      <span className="inline-flex items-center gap-1.5 bg-red-50 text-red-700 text-xs font-semibold px-3 py-1 rounded-full border border-red-200">
+                        🚫 Blocked (3/3 attempts used)
+                      </span>
+                    ) : authUser?.sellerRequest?.status === 'rejected' ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-red-500">
+                          ❌ Rejected ({authUser?.sellerRequest?.rejectionCount}/3 attempts)
+                        </span>
+                        <button
+                          onClick={handleBecomeSeller}
+                          className="inline-flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-3 py-1 rounded-full transition-colors"
+                        >
+                          🏪 Apply Again
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleBecomeSeller}
+                        className="inline-flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold px-3 py-1 rounded-full transition-colors"
+                      >
+                        🏪 Become a Seller
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {['basic', 'address', 'security'].map((tab) => (
+        <div className="flex gap-2 mb-5">
+          {tabs.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                activeTab === tab
-                  ? 'bg-indigo-600 text-white shadow'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === tab.id
+                  ? 'bg-primary-600 text-white shadow-sm'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
               }`}
             >
-              {tab === 'basic' && '👤 Basic Info'}
-              {tab === 'address' && '📍 Address'}
-              {tab === 'security' && '🔒 Security'}
+              {tab.icon} {tab.label}
             </button>
           ))}
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+        >
 
-          {/* Basic Info Tab */}
+          {/* Basic Info */}
           {activeTab === 'basic' && (
             <div>
-              <h2 className="text-lg font-semibold mb-5 text-gray-700">Basic Information</h2>
+              <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
+                <div className="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center">
+                  <FiUser size={14} className="text-primary-600" />
+                </div>
+                Basic Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>Full Name</label>
+                  <div className="relative">
+                    <FiUser className="absolute left-3.5 top-3 text-gray-400" size={14} />
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} className={`${inputClass} pl-9`} placeholder="Your full name" />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>Email Address</label>
+                  <div className="relative">
+                    <FiMail className="absolute left-3.5 top-3 text-gray-400" size={14} />
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} className={`${inputClass} pl-9`} />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Phone</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="Enter phone number"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>Phone Number</label>
+                  <div className="relative">
+                    <FiPhone className="absolute left-3.5 top-3 text-gray-400" size={14} />
+                    <input type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="+91 98765 43210" className={`${inputClass} pl-9`} />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Gender</label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  >
+                  <label className={labelClass}>Gender</label>
+                  <select name="gender" value={formData.gender} onChange={handleChange} className={inputClass}>
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -264,127 +274,99 @@ const handleBecomeSeller = async () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>Date of Birth</label>
+                  <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} className={inputClass} />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Address Tab */}
+          {/* Address */}
           {activeTab === 'address' && (
             <div>
-              <h2 className="text-lg font-semibold mb-5 text-gray-700">Address Details</h2>
+              <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
+                <div className="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center">
+                  <FiMapPin size={14} className="text-primary-600" />
+                </div>
+                Address Details
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Street</label>
-                  <input
-                    type="text"
-                    name="street"
-                    value={formData.address.street}
-                    onChange={handleChange}
-                    placeholder="Enter street address"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>Street Address</label>
+                  <input type="text" name="street" value={formData.address.street} onChange={handleChange} placeholder="123, Main Street" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">City</label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.address.city}
-                    onChange={handleChange}
-                    placeholder="Enter city"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>City</label>
+                  <input type="text" name="city" value={formData.address.city} onChange={handleChange} placeholder="Delhi" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">State</label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.address.state}
-                    onChange={handleChange}
-                    placeholder="Enter state"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>State</label>
+                  <input type="text" name="state" value={formData.address.state} onChange={handleChange} placeholder="Delhi" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Zip Code</label>
-                  <input
-                    type="text"
-                    name="zipCode"
-                    value={formData.address.zipCode}
-                    onChange={handleChange}
-                    placeholder="Enter zip code"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>ZIP Code</label>
+                  <input type="text" name="zipCode" value={formData.address.zipCode} onChange={handleChange} placeholder="110001" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Country</label>
-                  <input
-                    type="text"
-                    name="country"
-                    value={formData.address.country}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                  <label className={labelClass}>Country</label>
+                  <input type="text" name="country" value={formData.address.country} onChange={handleChange} className={inputClass} />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Security Tab */}
+          {/* Security */}
           {activeTab === 'security' && (
             <div>
-              <h2 className="text-lg font-semibold mb-5 text-gray-700">Change Password</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-lg">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-600 mb-1">New Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Leave blank to keep current"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+              <h2 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
+                <div className="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center">
+                  <FiLock size={14} className="text-primary-600" />
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Confirm Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="Confirm new password"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-gray-50"
-                  />
+                Change Password
+              </h2>
+              <div className="max-w-md space-y-5">
+                <div>
+                  <label className={labelClass}>New Password</label>
+                  <div className="relative">
+                    <FiLock className="absolute left-3.5 top-3 text-gray-400" size={14} />
+                    <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Leave blank to keep current" className={`${inputClass} pl-9`} />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Confirm Password</label>
+                  <div className="relative">
+                    <FiLock className="absolute left-3.5 top-3 text-gray-400" size={14} />
+                    <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm new password" className={`${inputClass} pl-9`} />
+                  </div>
+                  {formData.password && formData.confirmPassword && formData.password === formData.confirmPassword && (
+                    <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1"><FiCheck size={12} /> Passwords match</p>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Save Button - it will apprear only when some information changes */}
+          {/* Save Button */}
           {(isChanged || formData.password) && (
-            <div className="mt-6 flex justify-end">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 flex justify-end border-t border-gray-100 pt-5"
+            >
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2.5 rounded-xl font-semibold disabled:opacity-50 transition-all shadow-md"
+                className="btn-primary flex items-center gap-2 px-8 disabled:opacity-60"
               >
-                {saving ? 'Saving...' : 'Save Changes ✅'}
+                {saving
+                  ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span> Saving...</>
+                  : <><FiSave size={15} /> Save Changes</>
+                }
               </button>
-            </div>
+            </motion.div>
           )}
 
-        </div>
+        </motion.div>
       </div>
     </div>
   );

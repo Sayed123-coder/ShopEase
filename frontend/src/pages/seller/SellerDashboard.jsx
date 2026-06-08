@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiPlus, FiEdit2, FiTrash2, FiPackage, FiShoppingBag, FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 
@@ -9,14 +11,8 @@ const categories = [
 ];
 
 const emptyForm = {
-  name: '',
-  description: '',
-  price: '',
-  originalPrice: '',
-  category: '',
-  brand: '',
-  stock: '',
-  images: '',
+  name: '', description: '', price: '', originalPrice: '',
+  category: '', brand: '', stock: '', images: '',
 };
 
 const SellerDashboard = () => {
@@ -57,9 +53,7 @@ const SellerDashboard = () => {
     fetchOrders();
   }, []);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -116,7 +110,7 @@ const SellerDashboard = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
       await api.delete(`/api/seller/products/${id}`);
-      toast.success('Product deleted! 🗑️');
+      toast.success('Product deleted!');
       fetchProducts();
     } catch (error) {
       toast.error('Delete failed!');
@@ -128,19 +122,13 @@ const SellerDashboard = () => {
       toast.error('Please fill all required fields!');
       return;
     }
-
     setSaving(true);
     try {
       let imageUrl = formData.images;
-
       if (imageFile) {
         imageUrl = await uploadImage();
-        if (!imageUrl) {
-          setSaving(false);
-          return;
-        }
+        if (!imageUrl) { setSaving(false); return; }
       }
-
       const payload = {
         ...formData,
         price: Number(formData.price),
@@ -148,15 +136,13 @@ const SellerDashboard = () => {
         stock: Number(formData.stock),
         images: imageUrl ? [imageUrl] : [],
       };
-
       if (editProduct) {
         await api.put(`/api/seller/products/${editProduct._id}`, payload);
         toast.success('Product updated! ✅');
       } else {
         await api.post('/api/seller/products', payload);
-        toast.success('Product added! 🎉');
+        toast.success('Product added for approval! 🎉');
       }
-
       setShowModal(false);
       setImageFile(null);
       setImagePreview('');
@@ -168,211 +154,244 @@ const SellerDashboard = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
+  const inputClass = "w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white";
+  const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50">
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">🏪 Seller Dashboard</h1>
-        <button
-          onClick={handleAdd}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-semibold"
-        >
-          + Add Product
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-          <p className="text-sm text-indigo-500">Total Products</p>
-          <p className="text-3xl font-bold text-indigo-700">{products.length}</p>
-        </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-sm text-green-500">Active Products</p>
-          <p className="text-3xl font-bold text-green-700">
-            {products.filter(p => p.isActive).length}
-          </p>
-        </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-sm text-yellow-500">Out of Stock</p>
-          <p className="text-3xl font-bold text-yellow-700">
-            {products.filter(p => p.stock === 0).length}
-          </p>
-        </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <p className="text-sm text-purple-500">Total Orders</p>
-          <p className="text-3xl font-bold text-purple-700">{sellerOrders.length}</p>
-          <Link
-            to="/seller/orders"
-            className="text-xs text-purple-500 hover:underline mt-1 block"
-          >
-            View Orders →
-          </Link>
-        </div>
-      </div>
-
-      {/* Products List */}
-      {products.length === 0 ? (
-        <div className="text-center py-20 text-gray-500">
-          <p className="text-4xl mb-4">📦</p>
-          <p className="text-lg">No products yet!</p>
-          <button
-            onClick={handleAdd}
-            className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700"
-          >
-            Add Your First Product
+      <div className="bg-white border-b border-gray-100">
+        <div className="container-custom py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Seller Dashboard</h1>
+            <p className="text-gray-400 text-sm mt-1">Manage your products and orders</p>
+          </div>
+          <button onClick={handleAdd} className="btn-primary flex items-center gap-2">
+            <FiPlus size={16} /> Add Product
           </button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {products.map((product) => (
-            <div key={product._id} className="bg-white border rounded-lg p-4 shadow-sm flex items-center gap-4">
+      </div>
 
-              {/* Image */}
-              <img
-                src={product.images?.[0] || 'https://placehold.co/300x300?text=No+Image'}
-                alt={product.name}
-                className="w-16 h-16 object-cover rounded"
-              />
+      <div className="container-custom py-8">
 
-              {/* Info */}
-              <div className="flex-1">
-                <h2 className="font-semibold">{product.name}</h2>
-                <p className="text-sm text-gray-500">{product.category} • {product.brand}</p>
-                <div className="flex gap-3 mt-1 text-sm">
-                  <span className="font-bold text-gray-800">₹{product.price}</span>
-                  <span className="text-gray-500">Stock: {product.stock}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    product.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}>
-                    {product.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
+          {[
+            { label: 'Total Products', value: products.length,                               icon: <FiPackage size={18} />,     bg: 'bg-primary-50',  text: 'text-primary-700',  border: 'border-primary-100', iconBg: 'bg-primary-100 text-primary-600' },
+            { label: 'Active Products', value: products.filter(p => p.isActive).length,      icon: <FiCheckCircle size={18} />, bg: 'bg-green-50',    text: 'text-green-700',    border: 'border-green-100',   iconBg: 'bg-green-100 text-green-600'   },
+            { label: 'Out of Stock',    value: products.filter(p => p.stock === 0).length,   icon: <FiAlertCircle size={18} />, bg: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-100',   iconBg: 'bg-amber-100 text-amber-600'   },
+            { label: 'Total Orders',   value: sellerOrders.length,                           icon: <FiShoppingBag size={18} />, bg: 'bg-purple-50',   text: 'text-purple-700',   border: 'border-purple-100',  iconBg: 'bg-purple-100 text-purple-600' },
+          ].map((card, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.07 }}
+              className={`${card.bg} border ${card.border} rounded-2xl p-4`}
+            >
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${card.iconBg}`}>
+                {card.icon}
               </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(product)}
-                  className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded text-sm font-semibold"
-                >
-                  ✏️ Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(product._id)}
-                  className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-sm font-semibold"
-                >
-                  🗑️ Delete
-                </button>
-              </div>
-
-            </div>
+              <p className="text-xs text-gray-500 font-medium mb-1">{card.label}</p>
+              <p className={`text-2xl font-bold ${card.text}`}>{card.value}</p>
+              {card.label === 'Total Orders' && (
+                <Link to="/seller/orders" className="text-xs text-purple-500 hover:underline mt-1 block font-medium">
+                  View Orders →
+                </Link>
+              )}
+            </motion.div>
           ))}
         </div>
-      )}
+
+        {/* Products List */}
+        {products.length === 0 ? (
+          <div className="text-center py-24">
+            <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-5">
+              <FiPackage size={32} className="text-primary-400" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No products yet</h3>
+            <p className="text-gray-400 text-sm mb-6">Add your first product to start selling!</p>
+            <button onClick={handleAdd} className="btn-primary flex items-center gap-2 mx-auto">
+              <FiPlus size={15} /> Add First Product
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {products.map((product, i) => (
+              <motion.div
+                key={product._id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4"
+              >
+                {/* Image */}
+                <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0">
+                  <img
+                    src={product.images?.[0] || 'https://placehold.co/300x300?text=No+Image'}
+                    alt={product.name}
+                    className="w-full h-full object-contain p-1.5"
+                    onError={e => { e.target.src = 'https://placehold.co/300x300?text=No+Image'; }}
+                  />
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="font-semibold text-gray-900 text-sm truncate">{product.name}</h2>
+                    {!product.isActive && (
+                      <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-full font-medium">
+                        ⏳ Pending Approval
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">{product.category}{product.brand ? ` · ${product.brand}` : ''}</p>
+                  <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                    <span className="text-sm font-bold text-gray-900">₹{product.price?.toLocaleString()}</span>
+                    <span className="text-xs text-gray-400">Stock: {product.stock}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
+                      product.isActive
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                    }`}>
+                      {product.isActive ? '✅ Active' : '⏳ Pending'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => handleEdit(product)}
+                    className="flex items-center gap-1.5 bg-primary-50 hover:bg-primary-100 text-primary-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border border-primary-200"
+                  >
+                    <FiEdit2 size={12} /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product._id)}
+                    className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border border-red-200"
+                  >
+                    <FiTrash2 size={12} /> Delete
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Add/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">
-              {editProduct ? '✏️ Edit Product' : '➕ Add Product'}
-            </h2>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Product Name *</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-gray-100"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h2 className="text-lg font-bold text-gray-900">
+                  {editProduct ? '✏️ Edit Product' : '➕ Add New Product'}
+                </h2>
+                <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors">
+                  <FiX size={15} className="text-gray-500" />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Description *</label>
-                <textarea name="description" value={formData.description} onChange={handleChange}
-                  rows={3}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Price (₹) *</label>
-                  <input type="number" name="price" value={formData.price} onChange={handleChange}
-                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                  <label className={labelClass}>Product Name *</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} className={inputClass} placeholder="e.g. Sony WH-1000XM5" />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Original Price (₹)</label>
-                  <input type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange}
-                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                  <label className={labelClass}>Description</label>
+                  <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className={`${inputClass} resize-none`} placeholder="Describe your product..." />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelClass}>Price (₹) *</label>
+                    <input type="number" name="price" value={formData.price} onChange={handleChange} className={inputClass} placeholder="999" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Original Price (₹)</label>
+                    <input type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange} className={inputClass} placeholder="1499" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelClass}>Category *</label>
+                    <select name="category" value={formData.category} onChange={handleChange} className={inputClass}>
+                      <option value="">Select Category</option>
+                      {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Brand</label>
+                    <input type="text" name="brand" value={formData.brand} onChange={handleChange} className={inputClass} placeholder="e.g. Sony" />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Category *</label>
-                  <select name="category" value={formData.category} onChange={handleChange}
-                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    <option value="">Select Category</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                  <label className={labelClass}>Stock *</label>
+                  <input type="number" name="stock" value={formData.stock} onChange={handleChange} className={inputClass} placeholder="10" />
                 </div>
+
+                {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Brand</label>
-                  <input type="text" name="brand" value={formData.brand} onChange={handleChange}
-                    className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Stock *</label>
-                <input type="number" name="stock" value={formData.stock} onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <label className="block text-sm font-medium mb-1">Product Image</label>
-
-                {imagePreview && (
-                  <img
-                    src={imagePreview}
-                    alt="preview"
-                    className="w-24 h-24 object-cover rounded-lg mb-2"
+                  <label className={labelClass}>Product Image</label>
+                  {imagePreview && (
+                    <div className="mb-3">
+                      <img src={imagePreview} alt="preview" className="w-24 h-24 object-contain bg-gray-50 rounded-xl border border-gray-200 p-2" />
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer"
                   />
-                )}
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                />
-                {uploadingImage && <p className="text-xs text-indigo-500 mt-1">Uploading...</p>}
+                  {uploadingImage && <p className="text-xs text-primary-600 mt-1.5 font-medium">⏳ Uploading image...</p>}
+                </div>
               </div>
-            </div>
 
-            <div className="flex gap-3 mt-5">
-              <button
-                onClick={handleSubmit}
-                disabled={saving || uploadingImage}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-semibold disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : editProduct ? 'Update Product' : 'Add Product'}
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-lg font-semibold"
-              >
-                Cancel
-              </button>
-            </div>
+              {/* Modal Footer */}
+              <div className="flex gap-3 p-6 border-t border-gray-100">
+                <button
+                  onClick={handleSubmit}
+                  disabled={saving || uploadingImage}
+                  className="flex-1 btn-primary py-3 flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {saving
+                    ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span> Saving...</>
+                    : editProduct ? '✅ Update Product' : '🚀 Add Product'
+                  }
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
     </div>
   );
